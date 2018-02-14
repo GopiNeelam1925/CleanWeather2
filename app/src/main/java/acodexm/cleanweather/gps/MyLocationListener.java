@@ -26,7 +26,6 @@ public class MyLocationListener implements LocationListener {
 
     @Override
     public void onProviderEnabled(String provider) {
-
     }
 
     @Override
@@ -35,9 +34,7 @@ public class MyLocationListener implements LocationListener {
     }
 
     @Override
-    public void onStatusChanged(String provider,
-                                int status, Bundle extras) {
-
+    public void onStatusChanged(String provider, int status, Bundle extras) {
     }
 
 }

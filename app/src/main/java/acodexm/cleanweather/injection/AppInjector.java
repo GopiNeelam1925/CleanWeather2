@@ -7,10 +7,10 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentManager;
 
+import acodexm.cleanweather.BaseApp;
 import dagger.android.AndroidInjection;
 import dagger.android.support.AndroidSupportInjection;
 import dagger.android.support.HasSupportFragmentInjector;
-import za.co.riggaroo.datecountdown.CountdownApplication;
 
 /**
  * @author rebeccafranks
@@ -21,7 +21,7 @@ public class AppInjector {
     private AppInjector() {
     }
 
-    public static void init(CountdownApplication countdownApplication) {
+    public static void init(BaseApp countdownApplication) {
         DaggerCountdownComponent.builder().application(countdownApplication)
                 .build().inject(countdownApplication);
         countdownApplication

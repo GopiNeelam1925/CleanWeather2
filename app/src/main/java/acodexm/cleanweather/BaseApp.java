@@ -1,28 +1,39 @@
 package acodexm.cleanweather;
 
+import android.app.Activity;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 
 import com.facebook.stetho.Stetho;
+import com.jakewharton.threetenabp.AndroidThreeTen;
 
-import acodexm.cleanweather.dependences.DaggerDeps;
-import acodexm.cleanweather.dependences.Deps;
-import acodexm.cleanweather.netwoking.NetworkModule;
+import javax.inject.Inject;
 
-public class BaseApp extends AppCompatActivity {
+import acodexm.cleanweather.injection.AppInjector;
+import dagger.android.AndroidInjector;
+import dagger.android.DispatchingAndroidInjector;
+import dagger.android.HasActivityInjector;
+import timber.log.Timber;
 
+public class BaseApp extends AppCompatActivity implements HasActivityInjector {
+    @Inject
+    DispatchingAndroidInjector<Activity> dispatchingAndroidInjector;
 
-    private Deps mDeps;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         Stetho.initializeWithDefaults(this);
-        mDeps = DaggerDeps.builder().networkModule(new NetworkModule()).build();
+        AndroidThreeTen.init(this);
+        if (BuildConfig.DEBUG) {
+            Timber.plant(new Timber.DebugTree());
+        }
+        AppInjector.init(this);
     }
 
-    public Deps getDeps() {
-        return mDeps;
-    }
 
+    @Override
+    public AndroidInjector<Activity> activityInjector() {
+        return dispatchingAndroidInjector;
+    }
 }
