@@ -6,6 +6,7 @@
     <color name="color_black">#000000</color>
     <color name="colorTint">#000</color>
     <color name="colorSunny">#fff176</color>
+    <color name="colorWelcome">#1565c0</color>
     <color name="colorCloudy">#b0bec5</color>
     <color name="colorNight">#3949ab</color>
     <color name="colorRain">#536dfe</color>

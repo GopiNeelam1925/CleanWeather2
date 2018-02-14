@@ -58,7 +58,6 @@ import acodexm.cleanweather.injection.Injectable;
 import acodexm.cleanweather.netwoking.WeatherServiceFactory;
 import acodexm.cleanweather.util.Constants;
 import acodexm.cleanweather.util.WeatherUtils;
-import acodexm.cleanweather.view.HomePresenter;
 import acodexm.cleanweather.view.custom.MyViewPager;
 import acodexm.cleanweather.view.custom.ZoomOutPageTransformer;
 import acodexm.cleanweather.view.fragments.DailyGraphFragment;
@@ -98,16 +97,12 @@ public class HomeActivity extends BaseApp implements NavigationView.OnNavigation
     @Inject
     WeatherServiceFactory mWeatherServiceFactory;
     private SearchView searchView;
-    private List<Fragment> fragments = new ArrayList<>();
-    private List<Double> geoLocation = new ArrayList<>();
-    private String mSearchLocation;
-    private HomePresenter presenter;
+    private String geoLocation;
     private boolean doubleBackToExitPressedOnce;
     private boolean isGeoPossibleFlag = true;
     private SharedPreferences mSharedPreferences;
     private SidebarAdapter mSidebarAdapter;
     private DaysPagerAdapter mDaysPagerAdapter;
-    private WeatherData mWeatherData;
     private boolean mViewLoaded;
 
     @Inject
@@ -151,11 +146,10 @@ public class HomeActivity extends BaseApp implements NavigationView.OnNavigation
 
     public void updateWeather() {
         Timber.d("updateWeather: ");
-        presenter.getWeather(mSearchLocation, Collections.emptyList(), setAmountOfDays(), setUnits());
     }
 
-    public String setAmountOfDays() {
-        return mSharedPreferences.getString(Constants.SETTING_DAY_LIST, 7 + "");
+    public int setAmountOfDays() {
+        return mSharedPreferences.getInt(Constants.SETTING_DAY_LIST, 7);
     }
 
 //    public String setUnits() {
@@ -166,8 +160,6 @@ public class HomeActivity extends BaseApp implements NavigationView.OnNavigation
 //            return "metric";
 //        }
 //    }
-
-
 //    @Override
 //    public void showWait() {
 //        progressContainer.setVisibility(View.VISIBLE);
@@ -175,39 +167,33 @@ public class HomeActivity extends BaseApp implements NavigationView.OnNavigation
 //        mViewPager.setVisibility(View.INVISIBLE);
 //        errorContainer.setVisibility(View.INVISIBLE);
 //    }
-
 //    @Override
 //    public void removeWait() {
 //        mViewPager.setVisibility(View.VISIBLE);
 //        mTabLayout.setVisibility(View.VISIBLE);
 //        progressContainer.setVisibility(View.INVISIBLE);
 //    }
-
-//    @Override
 //    public void onFailure(String appErrorMessage) {
 //        errorContainer.setVisibility(View.VISIBLE);
 //        mTabLayout.setVisibility(View.INVISIBLE);
 //        mViewPager.setVisibility(View.INVISIBLE);
 //        progressContainer.setVisibility(View.INVISIBLE);
-//        Log.e(TAG, "onFailure" + " " + appErrorMessage);
+//        Timber.e("onFailure %s ", appErrorMessage);
 //        Toast.makeText(this, R.string.error_message, Toast.LENGTH_SHORT).show();
 //    }
 
-//    @Override
-//    public void setWeatherView(WeatherData weatherData) {
-//        mWeatherData = weatherData;
-//        mSearchLocation = mWeatherData.getLocation();
-//        mSidebarAdapter.addSidebarListItem(mSearchLocation);
-//        mDataDao.save(mWeatherData);
-//        createFragments(mWeatherData);
-//        showFragments(mWeatherData);
-//        mViewLoaded = true;
-//    }
+
+    public void setWeatherView(WeatherData weatherData) {
+        mWeatherData = weatherData;
+        mSearchLocation = mWeatherData.getLocation();
+        mSidebarAdapter.addSidebarListItem(mSearchLocation);
+        createFragments(mWeatherData);
+        showFragments(mWeatherData);
+        mViewLoaded = true;
+    }
 
 
     private void createFragments(WeatherData weatherData) {
-        Log.d(TAG, "createFragments: weatherData" + weatherData.toString());
-        Log.d(TAG, "createFragments" + " " + "List<Fragment>.size() is " + fragments.size());
         if (fragments.size() != 0) {
             fragments.clear();
             try {
@@ -313,7 +299,8 @@ public class HomeActivity extends BaseApp implements NavigationView.OnNavigation
 
     @Override
     public void onBackPressed() {
-        Log.d(TAG, "onBackPressed" + " " + "Activity Back Pressed");
+
+        Timber.d("onBackPressed Activity Back Pressed");
         // check for double back press to exit
         if (searchView.isFocused())
             mActionButton.show();
@@ -321,7 +308,10 @@ public class HomeActivity extends BaseApp implements NavigationView.OnNavigation
         if (drawer.isDrawerOpen(GravityCompat.START)) {
             drawer.closeDrawer(GravityCompat.START);
         } else if (doubleBackToExitPressedOnce) {
-            super.onBackPressed();
+            Intent intent = new Intent(getApplicationContext(), WelcomeActivity.class);
+            intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+            intent.putExtra("EXIT", true);
+            startActivity(intent);
         } else {
             doubleBackToExitPressedOnce = true;
             Toast.makeText(this, R.string.msg_exit, Toast.LENGTH_SHORT).show();
@@ -357,13 +347,8 @@ public class HomeActivity extends BaseApp implements NavigationView.OnNavigation
     }
 
 
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        presenter.onStop();
-    }
-
-    public List<Double> getLocation() {
+    public String getLocation() {
+        StringBuilder geoLocation = new StringBuilder();
         try {
             if (checkGPSPermission()) {
                 LocationListener locationListener = new MyLocationListener();
@@ -371,18 +356,19 @@ public class HomeActivity extends BaseApp implements NavigationView.OnNavigation
                 locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 5000, 10, locationListener);
                 Location location = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
                 if (location != null) {
-                    geoLocation.add(location.getLatitude());
-                    geoLocation.add(location.getLongitude());
+                    geoLocation.append(location.getLatitude());
+                    geoLocation.append(",");
+                    geoLocation.append(location.getLongitude());
                 }
 
-                if (geoLocation.size() != 0)
+                if (geoLocation.length() > 0)
                     locationManager.removeUpdates(locationListener);
-                return geoLocation;
+                return geoLocation.toString();
             }
         } catch (SecurityException e) {
-            Log.e(TAG, "getLocation Error: " + " " + e.getMessage());
+            Timber.e("getLocation Error: %s", e.getMessage());
         }
-        return new ArrayList<>();
+        return geoLocation.toString();
     }
 
     private void showDialogGPS() {

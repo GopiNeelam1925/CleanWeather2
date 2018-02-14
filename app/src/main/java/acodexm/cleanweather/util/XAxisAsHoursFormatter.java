@@ -7,21 +7,22 @@ import com.github.mikephil.charting.formatter.IAxisValueFormatter;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
-import acodexm.cleanweather.model.openweathermap.hourly.WeatherDataHourly;
+import acodexm.cleanweather.data.model.current.WeatherDataCurrent;
+
 
 public class XAxisAsHoursFormatter implements IAxisValueFormatter {
 
-    private WeatherDataHourly mWeatherDataHourly;
+    private WeatherDataCurrent mWeatherDataCurrent;
     private SimpleDateFormat mSimpleDateFormat = new SimpleDateFormat("HH:mm");
 
-    public XAxisAsHoursFormatter(WeatherDataHourly weatherDataHourly) {
-        this.mWeatherDataHourly = weatherDataHourly;
+    public XAxisAsHoursFormatter(WeatherDataCurrent weatherDataCurrent) {
+        this.mWeatherDataCurrent = weatherDataCurrent;
     }
 
     @Override
     public String getFormattedValue(float value, AxisBase axis) {
         // "value" represents the position of the label on the axis (x or y)
-        Date date = new Date(mWeatherDataHourly.getList().get((int) value).getDt() * 1000L);
+        Date date = new Date(mWeatherDataCurrent.getCurrent().getLastUpdated());
         return mSimpleDateFormat.format(date);
     }
 }

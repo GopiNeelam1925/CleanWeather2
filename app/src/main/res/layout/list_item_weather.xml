@@ -29,14 +29,14 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignParentTop="true"
-        android:layout_toStartOf="@+id/ic_weather"
+        android:layout_toStartOf="@+id/weather_list_icon"
         android:padding="5dp"
         android:textAppearance="@style/TextAppearance.AppCompat.Headline"
         tools:text="7'C" />
 
 
     <android.support.v7.widget.AppCompatImageView
-        android:id="@+id/ic_weather"
+        android:id="@+id/weather_list_icon"
         android:layout_width="50dp"
         android:layout_height="50dp"
         android:layout_alignParentEnd="true"
