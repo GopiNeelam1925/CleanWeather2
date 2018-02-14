@@ -12,55 +12,50 @@ import dagger.android.AndroidInjection;
 import dagger.android.support.AndroidSupportInjection;
 import dagger.android.support.HasSupportFragmentInjector;
 
-/**
- * @author rebeccafranks
- * @since 2018/01/02.
- */
 
 public class AppInjector {
     private AppInjector() {
     }
 
     public static void init(BaseApp countdownApplication) {
-        DaggerCountdownComponent.builder().application(countdownApplication)
+        DaggerBaseComponent.builder().application(countdownApplication)
                 .build().inject(countdownApplication);
-        countdownApplication
-                .registerActivityLifecycleCallbacks(new Application.ActivityLifecycleCallbacks() {
-                    @Override
-                    public void onActivityCreated(Activity activity, Bundle savedInstanceState) {
-                        handleActivity(activity);
-                    }
+        countdownApplication.registerActivityLifecycleCallbacks(new Application.ActivityLifecycleCallbacks() {
+            @Override
+            public void onActivityCreated(Activity activity, Bundle savedInstanceState) {
+                handleActivity(activity);
+            }
 
-                    @Override
-                    public void onActivityStarted(Activity activity) {
+            @Override
+            public void onActivityStarted(Activity activity) {
 
-                    }
+            }
 
-                    @Override
-                    public void onActivityResumed(Activity activity) {
+            @Override
+            public void onActivityResumed(Activity activity) {
 
-                    }
+            }
 
-                    @Override
-                    public void onActivityPaused(Activity activity) {
+            @Override
+            public void onActivityPaused(Activity activity) {
 
-                    }
+            }
 
-                    @Override
-                    public void onActivityStopped(Activity activity) {
+            @Override
+            public void onActivityStopped(Activity activity) {
 
-                    }
+            }
 
-                    @Override
-                    public void onActivitySaveInstanceState(Activity activity, Bundle outState) {
+            @Override
+            public void onActivitySaveInstanceState(Activity activity, Bundle outState) {
 
-                    }
+            }
 
-                    @Override
-                    public void onActivityDestroyed(Activity activity) {
+            @Override
+            public void onActivityDestroyed(Activity activity) {
 
-                    }
-                });
+            }
+        });
     }
 
     private static void handleActivity(Activity activity) {

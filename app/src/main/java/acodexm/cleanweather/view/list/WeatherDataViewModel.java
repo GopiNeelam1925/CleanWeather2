@@ -8,7 +8,7 @@ import java.util.List;
 
 import javax.inject.Inject;
 
-import acodexm.cleanweather.data.model.current.WeatherData;
+import acodexm.cleanweather.data.model.current.WeatherDataCurrent;
 import io.reactivex.CompletableObserver;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.Disposable;
@@ -24,12 +24,12 @@ public class WeatherDataViewModel extends ViewModel {
     public WeatherDataListViewModel() {
     }
 
-    LiveData<List<WeatherData>> getWeatherDatas() {
+    LiveData<List<WeatherDataCurrent>> getWeatherDatas() {
         return weatherDataRepository.getWeatherDatas();
     }
 
-    void deleteWeatherData(WeatherData weatherData) {
-        weatherDataRepository.deleteWeatherData(weatherData)
+    void deleteWeatherData(WeatherDataCurrent weatherDataCurrent) {
+        weatherDataRepository.deleteWeatherData(weatherDataCurrent)
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(new CompletableObserver() {
@@ -40,12 +40,12 @@ public class WeatherDataViewModel extends ViewModel {
 
                     @Override
                     public void onComplete() {
-                        Timber.d("onComplete - deleted weatherData");
+                        Timber.d("onComplete - deleted weatherDataCurrent");
                     }
 
                     @Override
                     public void onError(Throwable e) {
-                        Timber.e(e, "OnError - deleted weatherData: ");
+                        Timber.e(e, "OnError - deleted weatherDataCurrent: ");
                     }
                 });
     }

@@ -6,9 +6,9 @@ import android.arch.persistence.room.RoomDatabase;
 import android.arch.persistence.room.TypeConverters;
 
 import acodexm.cleanweather.data.dao.WeatherDao;
-import acodexm.cleanweather.data.model.current.WeatherData;
+import acodexm.cleanweather.data.model.current.WeatherDataCurrent;
 
-@Database(entities = {WeatherData.class}, version = 1)
+@Database(entities = {WeatherDataCurrent.class}, version = 1)
 @TypeConverters(DateTypeConverter.class)
 public abstract class WeatherDatabase extends RoomDatabase {
 

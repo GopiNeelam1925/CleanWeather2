@@ -1,25 +1,13 @@
 
 package acodexm.cleanweather.data.model.current;
 
-import android.arch.persistence.room.ColumnInfo;
-import android.arch.persistence.room.Entity;
-import android.arch.persistence.room.PrimaryKey;
-
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 
-import static acodexm.cleanweather.data.model.current.WeatherData.TABLE_NAME;
 
-
-@Entity(tableName = TABLE_NAME)
-public class WeatherData {
-    public static final String TABLE_NAME = "weather_data";
-    public static final String LOCATION = "location";
-    @PrimaryKey(autoGenerate = true)
-    private int id;
+public class WeatherDataCurrent {
     @SerializedName("location")
     @Expose
-    @ColumnInfo(name = LOCATION)
     private Location location;
     @SerializedName("current")
     @Expose
@@ -44,7 +32,7 @@ public class WeatherData {
 
     @Override
     public String toString() {
-        return "WeatherData{" +
+        return "WeatherDataCurrent{" +
                 "location=" + location +
                 ", current=" + current +
                 '}';

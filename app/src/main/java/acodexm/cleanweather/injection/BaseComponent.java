@@ -2,29 +2,26 @@ package acodexm.cleanweather.injection;
 
 import javax.inject.Singleton;
 
+import acodexm.cleanweather.BaseApp;
 import dagger.BindsInstance;
 import dagger.Component;
 import dagger.android.support.AndroidSupportInjectionModule;
-import za.co.riggaroo.datecountdown.CountdownApplication;
 
 
 @Singleton
 @Component(modules = {AndroidSupportInjectionModule.class,
-        CountdownModule.class,
+        BaseModule.class,
         ActivityBuildersModule.class
-        })
-public interface CountdownComponent {
-
-    void inject(CountdownApplication countdownApplication);
-
+})
+public interface BaseComponent {
+    void inject(BaseApp baseApp);
 
     @Component.Builder
     interface Builder {
-
         @BindsInstance
-        Builder application(CountdownApplication application);
+        Builder application(BaseApp app);
 
-        CountdownComponent build();
+        BaseComponent build();
 
     }
 }

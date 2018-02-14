@@ -12,7 +12,7 @@ public class Constants {
     public static final String WEATHER_DATA_HOURLY = "weather_data_hourly";
     public static final String LIST_OF_CITIES = "list_of_cities";
     public static final int DOUBLE_BACK_PRESSED_DELAY = 2500;
-    public static final String API_KEY = "b6a2c9522530dfc95945f42076e6f875";
+    public static final String API_KEY = "e9a7857a3f2d4e3596c145511161711";
 
     public static final String CHART_TEMP = "chart_temp";
     public static final String CHART_RAIN = "chart_rain";

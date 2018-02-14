@@ -10,12 +10,12 @@ import javax.inject.Provider;
 import javax.inject.Singleton;
 
 @Singleton
-public class CountdownViewModelFactory extends ViewModelProvider.NewInstanceFactory {
+public class ViewModelFactory extends ViewModelProvider.NewInstanceFactory {
 
     private final Map<Class<? extends ViewModel>, Provider<ViewModel>> creators;
 
     @Inject
-    public CountdownViewModelFactory(Map<Class<? extends ViewModel>, Provider<ViewModel>> creators) {
+    public ViewModelFactory(Map<Class<? extends ViewModel>, Provider<ViewModel>> creators) {
         this.creators = creators;
     }
 

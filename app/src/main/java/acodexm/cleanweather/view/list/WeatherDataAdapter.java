@@ -8,6 +8,9 @@ import android.view.ViewGroup;
 
 import java.util.List;
 
+import acodexm.cleanweather.R;
+import acodexm.cleanweather.data.model.WeatherData;
+
 
 public class WeatherDataAdapter extends RecyclerView.Adapter<WeatherDataViewHolder> {
     private final Context context;
