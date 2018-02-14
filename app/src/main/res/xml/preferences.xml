@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+    <PreferenceCategory
+        android:key="setting_title_title_category"
+        android:title="@string/settings_title">
+        <SwitchPreference
+            android:id="@+id/setting_temp_unit"
+            android:key="setting_temp_unit"
+            android:title="@string/switch_temp_title"
+            android:summary="@string/switch_temp_summary"/>
+        <ListPreference
+            android:key="setting_day_list"
+            android:title="@string/setting_day_list_title"
+            android:summary="@string/setting_day_list_summary"
+            android:entries="@array/list_entries"
+            android:entryValues="@array/list_values"/>
+    </PreferenceCategory>
+</PreferenceScreen>

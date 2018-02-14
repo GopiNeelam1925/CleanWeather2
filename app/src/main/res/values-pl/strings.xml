@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">CleanWeather</string>
+    <string name="action_settings">Ustawienia</string>
+    <string name="search_title">Wyszukaj…</string>
+    <string name="search_hint">Wpisz miasto…</string>
+    <string name="msg_exit">Naciśnij ponownie by wyjść…</string>
+    <string name="preferences">Ustawienia</string>
+    <string name="settings_title">Opcje pogody</string>
+    <string name="switch_temp_title">Ustaw jednostki</string>
+    <string name="switch_temp_summary">Celsius i Metery/Fahrenheit i Mile</string>
+    <string name="pressure_unit">mb</string>
+    <string name="procentage">%</string>
+    <string name="setting_day_list_summary">Wybierz od 1 do 16 dni prognozy pogody</string>
+    <string name="setting_day_list_title">Wybierz ilość dni</string>
+    <string name="get_weather_here">Pogoda w otoczeniu</string>
+    <string name="error_message">Coś poszło nie tak! Sprawdź internet</string>
+    <string name="offline_message">Jesteś Offline! Wczytano ostatnią prognoze</string>
+    <string name="forecast_sentence_start">Prognoza na</string>
+    <string name="chart_details">Wykresy szczegółowe</string>
+    <string name="temperature">Temperatura</string>
+    <string name="rain_chance">Opad Deszczu</string>
+    <string name="wind_speed">Prędkość Wiatru</string>
+    <string name="pressure">Ciśnienie</string>
+    <string name="humidity">Wilgotność</string>
+    <string name="page_one">Teraz</string>
+    <string name="page_two">Szczegółowo</string>
+    <string name="page_tree_start">Następne</string>
+    <string name="page_tree_end">dni</string>
+    <string name="add_city">Dodaj miasto…</string>
+    <string name="signature">by Adam Kamiński</string>
+    <string name="forecast_sentence_end">dni:</string>
+    <string name="next_days">Następne dni:</string>
+    <string name="next_hours">Następne godziny:</string>
+</resources>
