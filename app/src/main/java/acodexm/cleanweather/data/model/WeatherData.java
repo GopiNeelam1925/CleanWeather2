@@ -1,6 +1,7 @@
 package acodexm.cleanweather.data.model;
 
 import android.arch.persistence.room.ColumnInfo;
+import android.arch.persistence.room.Embedded;
 import android.arch.persistence.room.Entity;
 import android.arch.persistence.room.PrimaryKey;
 
@@ -19,27 +20,29 @@ public class WeatherData {
     public static final String LOCATION_FIELD = "location";
 
     @PrimaryKey(autoGenerate = true)
-    private int id;
+    private int weatherID;
+    @Embedded
     private WeatherDataCurrent weatherDataCurrent;
+    @Embedded
     private WeatherDataForecast weatherDataForecast;
     private LocalDateTime date;
     @ColumnInfo(name = LOCATION_FIELD)
-    private String location;
+    private String locationName;
 
 
-    public WeatherData(WeatherDataCurrent weatherDataCurrent, WeatherDataForecast weatherDataForecast, LocalDateTime date, String location) {
+    public WeatherData(WeatherDataCurrent weatherDataCurrent, WeatherDataForecast weatherDataForecast, LocalDateTime date, String locationName) {
         this.weatherDataCurrent = weatherDataCurrent;
         this.weatherDataForecast = weatherDataForecast;
         this.date = date;
-        this.location = location;
+        this.locationName = locationName;
     }
 
-    public int getId() {
-        return id;
+    public int getWeatherID() {
+        return weatherID;
     }
 
-    public void setId(int id) {
-        this.id = id;
+    public void setWeatherID(int weatherID) {
+        this.weatherID = weatherID;
     }
 
     public WeatherDataCurrent getWeatherDataCurrent() {
@@ -66,22 +69,22 @@ public class WeatherData {
         this.date = date;
     }
 
-    public String getLocation() {
-        return location;
+    public String getLocationName() {
+        return locationName;
     }
 
-    public void setLocation(String location) {
-        this.location = location;
+    public void setLocationName(String locationName) {
+        this.locationName = locationName;
     }
 
     @Override
     public String toString() {
         return "WeatherData{" +
-                "id=" + id +
+                "weatherID=" + weatherID +
                 ", weatherDataCurrent=" + weatherDataCurrent +
                 ", weatherDataForecast=" + weatherDataForecast +
                 ", date=" + date +
-                ", location='" + location + '\'' +
+                ", locationName='" + locationName + '\'' +
                 '}';
     }
 }

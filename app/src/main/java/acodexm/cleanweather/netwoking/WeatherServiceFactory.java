@@ -24,7 +24,7 @@ public class WeatherServiceFactory {
                 mWeatherService.getWeatherData(Constants.API_KEY, location, lang),
                 mWeatherService.getWeatherDataForecast(Constants.API_KEY, location, days, lang),
                 (weatherDataCurrent, weatherDataForecast) -> new WeatherData(weatherDataCurrent,
-                        weatherDataForecast, LocalDateTime.now(), weatherDataCurrent.getLocation().getName()));
+                        weatherDataForecast, LocalDateTime.now(), weatherDataCurrent.getLocationCurrent().getNameCurrent()));
 
         return weatherData
                 .subscribeOn(Schedulers.io())

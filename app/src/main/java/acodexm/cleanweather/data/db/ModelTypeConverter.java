@@ -13,6 +13,8 @@ import java.lang.reflect.Type;
 import java.util.Collections;
 import java.util.List;
 
+import acodexm.cleanweather.data.model.forecast.Forecastday;
+
 public class ModelTypeConverter {
 
     @TypeConverter
@@ -26,37 +28,37 @@ public class ModelTypeConverter {
     }
 
     @TypeConverter
-    public static List<Object> stringToSomeObjectList(String data) {
+    public static List<Forecastday> stringToSomeObjectList(String data) {
         if (data == null) {
             return Collections.emptyList();
         }
         Gson gson = new Gson();
-        Type listType = new TypeToken<List<Object>>() {
+        Type listType = new TypeToken<List<Forecastday>>() {
         }.getType();
         return gson.fromJson(data, listType);
     }
 
     @TypeConverter
-    public static String someObjectListToString(List<Object> someObjects) {
+    public static String someObjectListToString(List<Forecastday> forecastdays) {
         Gson gson = new Gson();
-        return gson.toJson(someObjects);
+        return gson.toJson(forecastdays);
     }
-
-    @TypeConverter
-    public static Object stringToSomeObject(String data) {
-        if (data == null) {
-            return Collections.emptyList();
-        }
-        Gson gson = new Gson();
-        Type listType = new TypeToken<Object>() {
-        }.getType();
-        return gson.fromJson(data, listType);
-    }
-
-    @TypeConverter
-    public static String someObjectToString(Object someObjects) {
-        Gson gson = new Gson();
-        return gson.toJson(someObjects);
-    }
+//
+//    @TypeConverter
+//    public static Object stringToSomeObject(String data) {
+//        if (data == null) {
+//            return Collections.emptyList();
+//        }
+//        Gson gson = new Gson();
+//        Type listType = new TypeToken<Object>() {
+//        }.getType();
+//        return gson.fromJson(data, listType);
+//    }
+//
+//    @TypeConverter
+//    public static String someObjectToString(Object someObjects) {
+//        Gson gson = new Gson();
+//        return gson.toJson(someObjects);
+//    }
 }
 

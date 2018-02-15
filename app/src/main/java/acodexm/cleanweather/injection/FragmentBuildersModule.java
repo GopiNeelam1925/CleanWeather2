@@ -1,5 +1,6 @@
 package acodexm.cleanweather.injection;
 
+import acodexm.cleanweather.view.fragments.HomeFragment;
 import acodexm.cleanweather.view.fragments.HourlyGraphFragment;
 import acodexm.cleanweather.view.fragments.WeatherForecastFragment;
 import dagger.Module;
@@ -9,7 +10,7 @@ import dagger.android.ContributesAndroidInjector;
 public abstract class FragmentBuildersModule {
 
     @ContributesAndroidInjector
-    abstract WeatherForecastFragment contributeWeatherDataFragment();
+    abstract HomeFragment contributeHomeFragment();
 
     @ContributesAndroidInjector
     abstract WeatherForecastFragment contributeWeatherForecastFragment();

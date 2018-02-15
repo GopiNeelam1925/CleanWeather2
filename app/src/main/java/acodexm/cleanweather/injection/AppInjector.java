@@ -17,10 +17,10 @@ public class AppInjector {
     private AppInjector() {
     }
 
-    public static void init(BaseApp countdownApplication) {
-        DaggerBaseComponent.builder().application(countdownApplication)
-                .build().inject(countdownApplication);
-        countdownApplication.registerActivityLifecycleCallbacks(new Application.ActivityLifecycleCallbacks() {
+    public static void init(BaseApp baseApp) {
+        DaggerBaseComponent.builder().application(baseApp)
+                .build().inject(baseApp);
+        baseApp.registerActivityLifecycleCallbacks(new Application.ActivityLifecycleCallbacks() {
             @Override
             public void onActivityCreated(Activity activity, Bundle savedInstanceState) {
                 handleActivity(activity);

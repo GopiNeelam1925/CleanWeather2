@@ -325,7 +325,7 @@ public class HourlyGraphFragment extends Fragment implements Injectable {
                 break;
             case Constants.CHART_HUM:
 //                for (int i = 0; i < weatherDataHourly.getList().size(); i++) {
-//                    entries.add(new BarEntry(i, weatherDataHourly.getList().get(i).getMain().getHumidity().floatValue()));
+//                    entries.add(new BarEntry(i, weatherDataHourly.getList().get(i).getMain().getHumidityCurrent().floatValue()));
 //                }
                 break;
         }

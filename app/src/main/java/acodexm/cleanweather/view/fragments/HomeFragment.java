@@ -162,14 +162,14 @@ public class HomeFragment extends Fragment implements Injectable {
         mTemp.setText(day.getAvgtempC().toString());
         mTempMin.setText("|" + day.getMintempC().toString());
         mTempUnit.setText(isCelsius ? "\u00b0F" : "\u00b0C");
-        mLocation.setText(weatherData.getLocation());
+        mLocation.setText(weatherData.getLocationName());
         mWeatherCondition.setText(
                 day.getCondition().getText());
         mImageWeather.setImageResource(WeatherUtils.convertIconToResource(
                 day.getCondition().getIcon()));
         mLinearLayout.setBackgroundColor(getResources().getColor(WeatherUtils.convertIconToBackground(
                 day.getCondition().getIcon())));
-        Date date = new Date(weatherData.getWeatherDataCurrent().getCurrent().getLastUpdated());
+        Date date = new Date(weatherData.getWeatherDataCurrent().getCurrentCurrent().getLastUpdatedCurrent());
         mDate.setText(mSimpleDateFormat.format(date));
         mTime.setText(mSimpleTimeFormat.format(new Date()));
         Timber.d("Fragment setup Completed");
@@ -226,14 +226,14 @@ public class HomeFragment extends Fragment implements Injectable {
 //                for (int i = 0; i < days; i++) {
 //                    values.add(new Entry(i, weatherData.getWeatherDataForecast().getForecast().getForecastday().get(i).getDay().getAvgtempC(),
 //                            getResources().getDrawable(WeatherUtils.convertIconToResource(
-//                                    weatherData.getWeatherDataForecast().getForecast().getForecastday().get(i).getDay().getCondition().getIcon()))));
+//                                    weatherData.getWeatherDataForecast().getForecast().getForecastday().get(i).getDay().getConditionCurrentCurrent().getIconCurrent()))));
 //                }
                 break;
             case Constants.CHART_HOURS:
 //                for (int i = 0; i < weatherData.getWeatherDataHourly().getList().size(); i++) {
 //                    values.add(new Entry(i, weatherData.getWeatherDataHourly().getList().get(i).getMain().getTemp().floatValue(),
 //                            getResources().getDrawable(WeatherUtils.convertIconToResource(
-//                                    weatherData.getWeatherDataHourly().getList().get(i).getWeather().get(0).getIcon()))));
+//                                    weatherData.getWeatherDataHourly().getList().get(i).getWeather().get(0).getIconCurrent()))));
 //                }
                 break;
 

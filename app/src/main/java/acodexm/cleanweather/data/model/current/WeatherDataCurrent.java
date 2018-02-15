@@ -1,6 +1,7 @@
 
 package acodexm.cleanweather.data.model.current;
 
+import android.arch.persistence.room.Embedded;
 import android.arch.persistence.room.Entity;
 import android.arch.persistence.room.PrimaryKey;
 
@@ -13,43 +14,45 @@ import static acodexm.cleanweather.data.model.current.WeatherDataCurrent.WEATHER
 public class WeatherDataCurrent {
     public static final String WEATHER_CURRENT = "weather_current";
     @PrimaryKey(autoGenerate = true)
-    private int id;
-    @SerializedName("location")
+    private int weatherCurrentID;
+    @SerializedName("locationCurrent")
     @Expose
-    private Location location;
-    @SerializedName("current")
+    @Embedded
+    private LocationCurrent locationCurrent;
+    @SerializedName("currentCurrent")
     @Expose
-    private Current current;
+    @Embedded
+    private CurrentCurrent currentCurrent;
 
-    public int getId() {
-        return id;
+    public int getWeatherCurrentID() {
+        return weatherCurrentID;
     }
 
-    public void setId(int id) {
-        this.id = id;
+    public void setWeatherCurrentID(int weatherCurrentID) {
+        this.weatherCurrentID = weatherCurrentID;
     }
 
-    public Location getLocation() {
-        return location;
+    public LocationCurrent getLocationCurrent() {
+        return locationCurrent;
     }
 
-    public void setLocation(Location location) {
-        this.location = location;
+    public void setLocationCurrent(LocationCurrent locationCurrent) {
+        this.locationCurrent = locationCurrent;
     }
 
-    public Current getCurrent() {
-        return current;
+    public CurrentCurrent getCurrentCurrent() {
+        return currentCurrent;
     }
 
-    public void setCurrent(Current current) {
-        this.current = current;
+    public void setCurrentCurrent(CurrentCurrent currentCurrent) {
+        this.currentCurrent = currentCurrent;
     }
 
     @Override
     public String toString() {
         return "WeatherDataCurrent{" +
-                "location=" + location +
-                ", current=" + current +
+                "locationCurrent=" + locationCurrent +
+                ", currentCurrent=" + currentCurrent +
                 '}';
     }
 }

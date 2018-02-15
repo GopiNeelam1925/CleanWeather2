@@ -2,15 +2,13 @@
 package acodexm.cleanweather.data.model.forecast;
 
 import android.arch.persistence.room.Entity;
-import android.arch.persistence.room.PrimaryKey;
 
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 
 @Entity
 public class Astro {
-    @PrimaryKey(autoGenerate = true)
-    private int id;
+
     @SerializedName("sunrise")
     @Expose
     private String sunrise;
@@ -24,13 +22,6 @@ public class Astro {
     @Expose
     private String moonset;
 
-    public int getId() {
-        return id;
-    }
-
-    public void setId(int id) {
-        this.id = id;
-    }
     public String getSunrise() {
         return sunrise;
     }

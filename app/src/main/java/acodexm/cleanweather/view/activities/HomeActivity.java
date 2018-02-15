@@ -5,6 +5,8 @@ import android.Manifest;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.SearchManager;
+import android.arch.lifecycle.ViewModelProvider;
+import android.arch.lifecycle.ViewModelProviders;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -28,6 +30,7 @@ import android.support.v4.content.ContextCompat;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.view.MenuItemCompat;
 import android.support.v4.widget.DrawerLayout;
+import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.SearchView;
@@ -47,7 +50,6 @@ import java.util.TimerTask;
 
 import javax.inject.Inject;
 
-import acodexm.cleanweather.BaseApp;
 import acodexm.cleanweather.R;
 import acodexm.cleanweather.data.model.WeatherData;
 import acodexm.cleanweather.gps.MyLocationListener;
@@ -60,6 +62,7 @@ import acodexm.cleanweather.view.fragments.HomeFragment;
 import acodexm.cleanweather.view.fragments.HourlyGraphFragment;
 import acodexm.cleanweather.view.fragments.SidebarAdapter;
 import acodexm.cleanweather.view.fragments.WeatherForecastFragment;
+import acodexm.cleanweather.view.viewmodel.WeatherDataViewModel;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
@@ -68,7 +71,7 @@ import dagger.android.DispatchingAndroidInjector;
 import dagger.android.support.HasSupportFragmentInjector;
 import timber.log.Timber;
 
-public class HomeActivity extends BaseApp implements NavigationView.OnNavigationItemSelectedListener,
+public class HomeActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener,
         SidebarAdapter.SidebarUserClickAction, HasSupportFragmentInjector {
     private static final int REQUEST_RUNTIME_PERMISSION = 123;
     @BindView(R.id.toolbar)
@@ -95,10 +98,10 @@ public class HomeActivity extends BaseApp implements NavigationView.OnNavigation
     private SharedPreferences mSharedPreferences;
     private SidebarAdapter mSidebarAdapter;
     private DaysPagerAdapter mDaysPagerAdapter;
-//    private WeatherDataViewModel dataViewModel;
-//
-//    @Inject
-//    ViewModelProvider.Factory modelFactory;
+    private WeatherDataViewModel dataViewModel;
+
+    @Inject
+    ViewModelProvider.Factory modelFactory;
 
     @Inject
     DispatchingAndroidInjector<Fragment> supportFragmentInjector;
@@ -110,7 +113,7 @@ public class HomeActivity extends BaseApp implements NavigationView.OnNavigation
         ButterKnife.bind(this);
         setSupportActionBar(mToolbar);
         getSupportActionBar().hide();
-//        dataViewModel = ViewModelProviders.of(this, modelFactory).get(WeatherDataViewModel.class);
+        dataViewModel = ViewModelProviders.of(this, modelFactory).get(WeatherDataViewModel.class);
         mSharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
         PreferenceManager.setDefaultValues(this, R.xml.preferences, false);
         if (checkGPSPermission()) {
@@ -178,7 +181,7 @@ public class HomeActivity extends BaseApp implements NavigationView.OnNavigation
 
 
     public void setWeatherView(WeatherData weatherData) {
-        mSidebarAdapter.addSidebarListItem(weatherData.getLocation());
+        mSidebarAdapter.addSidebarListItem(weatherData.getLocationName());
         showFragments(weatherData, createFragments(weatherData));
     }
 
@@ -218,7 +221,7 @@ public class HomeActivity extends BaseApp implements NavigationView.OnNavigation
             @Override
             public boolean onQueryTextSubmit(String query) {
                 mSidebarAdapter.addSidebarListItem(query);
-//                dataViewModel.getWeather(query, setAmountOfDays(), "pl");
+                dataViewModel.getWeather(query, setAmountOfDays(), "pl");
                 searchView.clearFocus();
                 mActionButton.show();
                 getSupportActionBar().hide();
@@ -263,7 +266,7 @@ public class HomeActivity extends BaseApp implements NavigationView.OnNavigation
 //        if (savedInstanceState != null) {
 //            mWeatherData = (WeatherData) savedInstanceState.getSerializable(Constants.WEATHER_DATA);
 //            if (mWeatherData != null) {
-//                mSearchLocation = mWeatherData.getLocation();
+//                mSearchLocation = mWeatherData.getLocationCurrent();
 //                Timber.d(TAG, "onRestoreInstanceState" + " " + "restored weatherData" + mWeatherData.toString());
 //                isGeoPossibleFlag = false;
 //                mSidebarAdapter.setSidebarListItems(savedInstanceState.getStringArrayList(Constants.LIST_OF_CITIES));
@@ -341,7 +344,7 @@ public class HomeActivity extends BaseApp implements NavigationView.OnNavigation
                 return geoLocation.toString();
             }
         } catch (SecurityException e) {
-            Timber.e("getLocation Error: %s", e.getMessage());
+            Timber.e("getLocationCurrent Error: %s", e.getMessage());
         }
         return geoLocation.toString();
     }
@@ -397,12 +400,12 @@ public class HomeActivity extends BaseApp implements NavigationView.OnNavigation
     @Override
     public void onSidebarListItemClick(String location) {
 
-//        if (isOnline())
-//            dataViewModel.getWeather(location, setAmountOfDays(), "pl");
-//        else {
-//            setWeatherView(dataViewModel.getWeatherData().getValue());
-//            Toast.makeText(this, R.string.offline_message, Toast.LENGTH_SHORT).show();
-//        }
+        if (isOnline())
+            dataViewModel.getWeather(location, setAmountOfDays(), "pl");
+        else {
+            setWeatherView(dataViewModel.getWeatherData().getValue());
+            Toast.makeText(this, R.string.offline_message, Toast.LENGTH_SHORT).show();
+        }
     }
 
     @Override
@@ -423,7 +426,7 @@ public class HomeActivity extends BaseApp implements NavigationView.OnNavigation
         if (drawer.isDrawerOpen(GravityCompat.START)) {
             drawer.closeDrawer(GravityCompat.START);
         }
-//        dataViewModel.getWeather(geoLocation, setAmountOfDays(), "pl");
+        dataViewModel.getWeather(geoLocation, setAmountOfDays(), "pl");
     }
 
 }

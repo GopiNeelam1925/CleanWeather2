@@ -1,8 +1,7 @@
 package acodexm.cleanweather;
 
 import android.app.Activity;
-import android.os.Bundle;
-import android.support.v7.app.AppCompatActivity;
+import android.app.Application;
 
 import com.facebook.stetho.Stetho;
 import com.jakewharton.threetenabp.AndroidThreeTen;
@@ -15,14 +14,14 @@ import dagger.android.DispatchingAndroidInjector;
 import dagger.android.HasActivityInjector;
 import timber.log.Timber;
 
-public class BaseApp extends AppCompatActivity implements HasActivityInjector {
+public class BaseApp extends Application implements HasActivityInjector {
     @Inject
     DispatchingAndroidInjector<Activity> dispatchingAndroidInjector;
 
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
+    public void onCreate() {
+        super.onCreate();
         Stetho.initializeWithDefaults(this);
         AndroidThreeTen.init(this);
         if (BuildConfig.DEBUG) {

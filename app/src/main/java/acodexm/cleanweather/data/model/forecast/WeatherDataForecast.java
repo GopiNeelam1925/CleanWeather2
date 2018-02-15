@@ -1,6 +1,7 @@
 
 package acodexm.cleanweather.data.model.forecast;
 
+import android.arch.persistence.room.Embedded;
 import android.arch.persistence.room.Entity;
 import android.arch.persistence.room.PrimaryKey;
 
@@ -14,23 +15,26 @@ public class WeatherDataForecast {
 
     public static final String WEATHER_FORECAST = "weather_forecast";
     @PrimaryKey(autoGenerate = true)
-    private int id;
+    private int weatherForecastID;
     @SerializedName("location")
     @Expose
+    @Embedded
     private Location location;
     @SerializedName("current")
     @Expose
+    @Embedded
     private Current current;
     @SerializedName("forecast")
     @Expose
+    @Embedded
     private Forecast forecast;
 
-    public int getId() {
-        return id;
+    public int getWeatherForecastID() {
+        return weatherForecastID;
     }
 
-    public void setId(int id) {
-        this.id = id;
+    public void setWeatherForecastID(int weatherForecastID) {
+        this.weatherForecastID = weatherForecastID;
     }
 
     public Location getLocation() {

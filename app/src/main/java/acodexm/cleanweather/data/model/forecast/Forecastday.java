@@ -1,16 +1,15 @@
 
 package acodexm.cleanweather.data.model.forecast;
 
+import android.arch.persistence.room.Embedded;
 import android.arch.persistence.room.Entity;
-import android.arch.persistence.room.PrimaryKey;
 
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 
 @Entity
 public class Forecastday {
-    @PrimaryKey(autoGenerate = true)
-    private int id;
+
     @SerializedName("date")
     @Expose
     private String date;
@@ -19,18 +18,13 @@ public class Forecastday {
     private Integer dateEpoch;
     @SerializedName("day")
     @Expose
+    @Embedded
     private Day day;
     @SerializedName("astro")
     @Expose
+    @Embedded
     private Astro astro;
 
-    public int getId() {
-        return id;
-    }
-
-    public void setId(int id) {
-        this.id = id;
-    }
     public String getDate() {
         return date;
     }
