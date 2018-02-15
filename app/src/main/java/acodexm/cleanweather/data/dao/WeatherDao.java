@@ -9,8 +9,6 @@ import android.arch.persistence.room.OnConflictStrategy;
 import android.arch.persistence.room.Query;
 import android.arch.persistence.room.Update;
 
-import org.threeten.bp.LocalDateTime;
-
 import acodexm.cleanweather.data.model.WeatherData;
 
 import static android.arch.persistence.room.OnConflictStrategy.REPLACE;
@@ -19,7 +17,7 @@ import static android.arch.persistence.room.OnConflictStrategy.REPLACE;
 public interface WeatherDao {
 
     @Query("SELECT * FROM " + WeatherData.TABLE_NAME + " WHERE " + WeatherData.LOCATION_FIELD + " = :location")
-    LiveData<WeatherData> getWeatherData(LocalDateTime minDate);
+    LiveData<WeatherData> getWeatherData(String location);
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     void addWeatherData(WeatherData weatherData);

@@ -24,7 +24,6 @@ import android.support.design.widget.NavigationView;
 import android.support.design.widget.TabLayout;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentTransaction;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.view.MenuItemCompat;
@@ -33,7 +32,6 @@ import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.SearchView;
 import android.support.v7.widget.Toolbar;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -43,7 +41,6 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -54,17 +51,15 @@ import acodexm.cleanweather.BaseApp;
 import acodexm.cleanweather.R;
 import acodexm.cleanweather.data.model.WeatherData;
 import acodexm.cleanweather.gps.MyLocationListener;
-import acodexm.cleanweather.injection.Injectable;
-import acodexm.cleanweather.netwoking.WeatherServiceFactory;
 import acodexm.cleanweather.util.Constants;
 import acodexm.cleanweather.util.WeatherUtils;
 import acodexm.cleanweather.view.custom.MyViewPager;
 import acodexm.cleanweather.view.custom.ZoomOutPageTransformer;
-import acodexm.cleanweather.view.fragments.DailyGraphFragment;
 import acodexm.cleanweather.view.fragments.DaysPagerAdapter;
 import acodexm.cleanweather.view.fragments.HomeFragment;
 import acodexm.cleanweather.view.fragments.HourlyGraphFragment;
 import acodexm.cleanweather.view.fragments.SidebarAdapter;
+import acodexm.cleanweather.view.fragments.WeatherForecastFragment;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
@@ -74,7 +69,7 @@ import dagger.android.support.HasSupportFragmentInjector;
 import timber.log.Timber;
 
 public class HomeActivity extends BaseApp implements NavigationView.OnNavigationItemSelectedListener,
-        SidebarAdapter.SidebarUserClickAction, HasSupportFragmentInjector, Injectable {
+        SidebarAdapter.SidebarUserClickAction, HasSupportFragmentInjector {
     private static final int REQUEST_RUNTIME_PERMISSION = 123;
     @BindView(R.id.toolbar)
     protected Toolbar mToolbar;
@@ -94,16 +89,16 @@ public class HomeActivity extends BaseApp implements NavigationView.OnNavigation
     protected RecyclerView mSidebarList;
     @BindView(R.id.add_city)
     protected TextView mAddCity;
-    @Inject
-    WeatherServiceFactory mWeatherServiceFactory;
     private SearchView searchView;
     private String geoLocation;
-    private boolean doubleBackToExitPressedOnce;
-    private boolean isGeoPossibleFlag = true;
+    private boolean isBackButtonPressed;
     private SharedPreferences mSharedPreferences;
     private SidebarAdapter mSidebarAdapter;
     private DaysPagerAdapter mDaysPagerAdapter;
-    private boolean mViewLoaded;
+//    private WeatherDataViewModel dataViewModel;
+//
+//    @Inject
+//    ViewModelProvider.Factory modelFactory;
 
     @Inject
     DispatchingAndroidInjector<Fragment> supportFragmentInjector;
@@ -115,8 +110,7 @@ public class HomeActivity extends BaseApp implements NavigationView.OnNavigation
         ButterKnife.bind(this);
         setSupportActionBar(mToolbar);
         getSupportActionBar().hide();
-
-        mViewLoaded = false;
+//        dataViewModel = ViewModelProviders.of(this, modelFactory).get(WeatherDataViewModel.class);
         mSharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
         PreferenceManager.setDefaultValues(this, R.xml.preferences, false);
         if (checkGPSPermission()) {
@@ -184,46 +178,28 @@ public class HomeActivity extends BaseApp implements NavigationView.OnNavigation
 
 
     public void setWeatherView(WeatherData weatherData) {
-        mWeatherData = weatherData;
-        mSearchLocation = mWeatherData.getLocation();
-        mSidebarAdapter.addSidebarListItem(mSearchLocation);
-        createFragments(mWeatherData);
-        showFragments(mWeatherData);
-        mViewLoaded = true;
+        mSidebarAdapter.addSidebarListItem(weatherData.getLocation());
+        showFragments(weatherData, createFragments(weatherData));
     }
 
 
-    private void createFragments(WeatherData weatherData) {
-        if (fragments.size() != 0) {
-            fragments.clear();
-            try {
-                List<Fragment> allFragments = getSupportFragmentManager().getFragments();
-                if (allFragments != null) {
-                    for (Fragment fragment : allFragments) {
-                        FragmentTransaction trans = getSupportFragmentManager().beginTransaction();
-                        trans.remove(fragment);
-                        trans.commitNowAllowingStateLoss();
-                    }
-                }
-            } catch (Exception e) {
-                Log.e(TAG, "createFragments" + " " + e.getMessage());
-            }
-            Log.d(TAG, "createFragments" + " " + "List<Fragment>.clear() size is " + fragments.size());
-        }
+    private List<Fragment> createFragments(WeatherData weatherData) {
+        List<Fragment> fragments = new ArrayList<>();
         fragments.add(HomeFragment.newInstance(0, weatherData));
-        fragments.add(HourlyGraphFragment.newInstance(weatherData.getWeatherDataHourly(),
-                weatherData.getWeatherDataDaily()));
-        fragments.add(DailyGraphFragment.newInstance(weatherData.getWeatherDataDaily()));
-        Log.d(TAG, "createFragments" + " " + "new List<Fragment>.size() is " + fragments.size());
+        fragments.add(HourlyGraphFragment.newInstance(weatherData.getWeatherDataCurrent(),
+                weatherData.getWeatherDataForecast()));
+        fragments.add(WeatherForecastFragment.newInstance(weatherData));
+        Timber.d("createFragments new List<Fragment>.size() is %s", fragments.size());
+        return fragments;
     }
 
-    private void showFragments(WeatherData weatherData) {
+    private void showFragments(WeatherData weatherData, List<Fragment> fragments) {
         mDaysPagerAdapter = new DaysPagerAdapter(getSupportFragmentManager(), fragments, this);
         mViewPager.setAdapter(mDaysPagerAdapter);
         mViewPager.setPageTransformer(true, new ZoomOutPageTransformer());
         mTabLayout.setupWithViewPager(mViewPager);
         mTabLayout.getTabAt(0).setIcon(WeatherUtils.convertIconToResource(
-                weatherData.getWeatherDataDaily().getList().get(0).getWeather().get(0).getIcon()));
+                weatherData.getWeatherDataForecast().getForecast().getForecastday().get(0).getDay().getCondition().getIcon()));
         mTabLayout.getTabAt(1).setIcon(R.drawable.ic_cloud_details);
         mTabLayout.getTabAt(2).setIcon(R.drawable.ic_chart);
         mViewPager.setVisibility(View.VISIBLE);
@@ -241,9 +217,8 @@ public class HomeActivity extends BaseApp implements NavigationView.OnNavigation
         searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
             @Override
             public boolean onQueryTextSubmit(String query) {
-                mSearchLocation = query;
                 mSidebarAdapter.addSidebarListItem(query);
-                presenter.getWeather(mSearchLocation, Collections.emptyList(), setAmountOfDays(), setUnits());
+//                dataViewModel.getWeather(query, setAmountOfDays(), "pl");
                 searchView.clearFocus();
                 mActionButton.show();
                 getSupportActionBar().hide();
@@ -276,26 +251,26 @@ public class HomeActivity extends BaseApp implements NavigationView.OnNavigation
         return true;
     }
 
-    @Override
-    protected void onSaveInstanceState(Bundle outState) {
-        outState.putSerializable(Constants.WEATHER_DATA, mWeatherData);
-        outState.putStringArrayList(Constants.LIST_OF_CITIES, (ArrayList<String>) mSidebarAdapter.getSidebarListItems());
-        super.onSaveInstanceState(outState);
-    }
+//    @Override
+//    protected void onSaveInstanceState(Bundle outState) {
+//        outState.putSerializable(Constants.WEATHER_DATA, mWeatherData);
+//        outState.putStringArrayList(Constants.LIST_OF_CITIES, (ArrayList<String>) mSidebarAdapter.getSidebarListItems());
+//        super.onSaveInstanceState(outState);
+//    }
 
-    @Override
-    protected void onRestoreInstanceState(Bundle savedInstanceState) {
-        if (savedInstanceState != null) {
-            mWeatherData = (WeatherData) savedInstanceState.getSerializable(Constants.WEATHER_DATA);
-            if (mWeatherData != null) {
-                mSearchLocation = mWeatherData.getLocation();
-                Log.d(TAG, "onRestoreInstanceState" + " " + "restored weatherData" + mWeatherData.toString());
-                isGeoPossibleFlag = false;
-                mSidebarAdapter.setSidebarListItems(savedInstanceState.getStringArrayList(Constants.LIST_OF_CITIES));
-            }
-        }
-        super.onRestoreInstanceState(savedInstanceState);
-    }
+//    @Override
+//    protected void onRestoreInstanceState(Bundle savedInstanceState) {
+//        if (savedInstanceState != null) {
+//            mWeatherData = (WeatherData) savedInstanceState.getSerializable(Constants.WEATHER_DATA);
+//            if (mWeatherData != null) {
+//                mSearchLocation = mWeatherData.getLocation();
+//                Timber.d(TAG, "onRestoreInstanceState" + " " + "restored weatherData" + mWeatherData.toString());
+//                isGeoPossibleFlag = false;
+//                mSidebarAdapter.setSidebarListItems(savedInstanceState.getStringArrayList(Constants.LIST_OF_CITIES));
+//            }
+//        }
+//        super.onRestoreInstanceState(savedInstanceState);
+//    }
 
     @Override
     public void onBackPressed() {
@@ -307,19 +282,19 @@ public class HomeActivity extends BaseApp implements NavigationView.OnNavigation
         DrawerLayout drawer = findViewById(R.id.drawer_layout);
         if (drawer.isDrawerOpen(GravityCompat.START)) {
             drawer.closeDrawer(GravityCompat.START);
-        } else if (doubleBackToExitPressedOnce) {
+        } else if (isBackButtonPressed) {
             Intent intent = new Intent(getApplicationContext(), WelcomeActivity.class);
             intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
             intent.putExtra("EXIT", true);
             startActivity(intent);
         } else {
-            doubleBackToExitPressedOnce = true;
+            isBackButtonPressed = true;
             Toast.makeText(this, R.string.msg_exit, Toast.LENGTH_SHORT).show();
             Timer t = new Timer();
             t.schedule(new TimerTask() {
                 @Override
                 public void run() {
-                    doubleBackToExitPressedOnce = false;
+                    isBackButtonPressed = false;
                 }
             }, Constants.DOUBLE_BACK_PRESSED_DELAY);
         }
@@ -328,21 +303,21 @@ public class HomeActivity extends BaseApp implements NavigationView.OnNavigation
     @Override
     protected void onResume() {
         super.onResume();
-        if (mWeatherData != null) {
-            setWeatherView(mWeatherData);
-            Log.d(TAG, "onResume Activity" + " " + "creating view from saved instance?");
-        } else if (!isOnline()) {
-            setWeatherView(mDataDao.getWeatherDataByCity(mSearchLocation).get(0));
-            Log.d(TAG, "onResume Activity" + " " + "creating view from database");
-            Toast.makeText(this, R.string.offline_message, Toast.LENGTH_SHORT).show();
-        } else if (!mViewLoaded && geoLocation.size() == 2 && isGeoPossibleFlag) {
-            isGeoPossibleFlag = false;
-            presenter.getWeather("", geoLocation, setAmountOfDays(), setUnits());
-            Log.d(TAG, "onResume Activity" + " " + "creating view and getting new WeatherDataCurrent with GPS");
-        } else if (!mViewLoaded) {
-            Log.d(TAG, "onResume Activity" + " " + "creating view and getting new WeatherDataCurrent");
-            presenter.getWeather(mSearchLocation, Collections.emptyList(), setAmountOfDays(), setUnits());
-        }
+//        if (mWeatherData != null) {
+//            setWeatherView(mWeatherData);
+//            Timber.d(TAG, "onResume Activity" + " " + "creating view from saved instance?");
+//        } else if (!isOnline()) {
+//            setWeatherView(mDataDao.getWeatherDataByCity(mSearchLocation).get(0));
+//            Timber.d(TAG, "onResume Activity" + " " + "creating view from database");
+//            Toast.makeText(this, R.string.offline_message, Toast.LENGTH_SHORT).show();
+//        } else if (!mViewLoaded && geoLocation.size() == 2 && isGeoPossibleFlag) {
+//            isGeoPossibleFlag = false;
+//            presenter.getWeather("", geoLocation, setAmountOfDays(), setUnits());
+//            Timber.d(TAG, "onResume Activity" + " " + "creating view and getting new WeatherDataCurrent with GPS");
+//        } else if (!mViewLoaded) {
+//            Timber.d(TAG, "onResume Activity" + " " + "creating view and getting new WeatherDataCurrent");
+//            presenter.getWeather(mSearchLocation, Collections.emptyList(), setAmountOfDays(), setUnits());
+//        }
 
     }
 
@@ -392,14 +367,14 @@ public class HomeActivity extends BaseApp implements NavigationView.OnNavigation
         if (CheckPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)) {
             if (!gpsStatus()) {
                 showDialogGPS();
-                Log.d(TAG, "checkGPSPermission" + " " + "go to GPS settings");
+                Timber.d("checkGPSPermission o to GPS settings");
             } else {
-                Log.d(TAG, "GPS permission" + " " + "Status OK");
+                Timber.d("GPS permission Status OK");
                 return true;
             }
         } else {
             RequestPermission(this, Manifest.permission.ACCESS_FINE_LOCATION, REQUEST_RUNTIME_PERMISSION);
-            Log.e(TAG, "RequestPermission" + " " + "case no gps permission");
+            Timber.e("RequestPermission case no gps permission");
         }
         return false;
     }
@@ -421,13 +396,13 @@ public class HomeActivity extends BaseApp implements NavigationView.OnNavigation
 
     @Override
     public void onSidebarListItemClick(String location) {
-        mSearchLocation = location;
-        if (isOnline())
-            presenter.getWeather(mSearchLocation, Collections.emptyList(), setAmountOfDays(), setUnits());
-        else {
-            setWeatherView(mDataDao.getWeatherDataByCity(location).get(0));
-            Toast.makeText(this, R.string.offline_message, Toast.LENGTH_SHORT).show();
-        }
+
+//        if (isOnline())
+//            dataViewModel.getWeather(location, setAmountOfDays(), "pl");
+//        else {
+//            setWeatherView(dataViewModel.getWeatherData().getValue());
+//            Toast.makeText(this, R.string.offline_message, Toast.LENGTH_SHORT).show();
+//        }
     }
 
     @Override
@@ -448,7 +423,7 @@ public class HomeActivity extends BaseApp implements NavigationView.OnNavigation
         if (drawer.isDrawerOpen(GravityCompat.START)) {
             drawer.closeDrawer(GravityCompat.START);
         }
-        presenter.getWeather("", geoLocation, setAmountOfDays(), setUnits());
+//        dataViewModel.getWeather(geoLocation, setAmountOfDays(), "pl");
     }
 
 }

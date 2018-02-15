@@ -1,11 +1,16 @@
 
 package acodexm.cleanweather.data.model.current;
 
+import android.arch.persistence.room.Entity;
+import android.arch.persistence.room.PrimaryKey;
+
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 
+@Entity
 public class Current {
-
+    @PrimaryKey(autoGenerate = true)
+    private int id;
     @SerializedName("last_updated_epoch")
     @Expose
     private Integer lastUpdatedEpoch;
@@ -67,6 +72,13 @@ public class Current {
     @Expose
     private Double visMiles;
 
+    public int getId() {
+        return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
+    }
     public Integer getLastUpdatedEpoch() {
         return lastUpdatedEpoch;
     }

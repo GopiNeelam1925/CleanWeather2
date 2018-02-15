@@ -1,11 +1,16 @@
 
 package acodexm.cleanweather.data.model.forecast;
 
+import android.arch.persistence.room.Entity;
+import android.arch.persistence.room.PrimaryKey;
+
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 
+@Entity
 public class Condition_ {
-
+    @PrimaryKey(autoGenerate = true)
+    private int id;
     @SerializedName("text")
     @Expose
     private String text;
@@ -16,6 +21,13 @@ public class Condition_ {
     @Expose
     private Integer code;
 
+    public int getId() {
+        return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
+    }
     public String getText() {
         return text;
     }

@@ -1,4 +1,4 @@
-package acodexm.cleanweather.view.list;
+package acodexm.cleanweather.view.fragments;
 
 import android.content.Context;
 import android.support.v7.widget.AppCompatImageView;
@@ -22,8 +22,7 @@ public class WeatherDataAdapter extends RecyclerView.Adapter<WeatherDataAdapter.
     private final Context context;
     private List<Forecastday> items;
 
-    WeatherDataAdapter(WeatherData items, Context context) {
-        this.items = items.getWeatherDataForecast().getForecast().getForecastday();
+    WeatherDataAdapter(Context context) {
         this.context = context;
     }
 

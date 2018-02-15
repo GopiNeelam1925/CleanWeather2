@@ -1,6 +1,6 @@
 package acodexm.cleanweather.injection;
 
-import acodexm.cleanweather.view.list.WeatherDataActivity;
+import acodexm.cleanweather.view.activities.HomeActivity;
 import dagger.Module;
 import dagger.android.ContributesAndroidInjector;
 
@@ -9,6 +9,6 @@ import dagger.android.ContributesAndroidInjector;
 public abstract class ActivityBuildersModule {
 
     @ContributesAndroidInjector(modules = FragmentBuildersModule.class)
-    abstract WeatherDataActivity bindWeatherDataActivity();
+    abstract HomeActivity bindHomeActivity();
 
 }

@@ -12,9 +12,9 @@ import java.util.List;
 
 import acodexm.cleanweather.R;
 import acodexm.cleanweather.view.activities.HomeActivity;
-import acodexm.cleanweather.view.fragments.DailyGraphFragment;
 import acodexm.cleanweather.view.fragments.HomeFragment;
 import acodexm.cleanweather.view.fragments.HourlyGraphFragment;
+import acodexm.cleanweather.view.fragments.WeatherForecastFragment;
 
 public class MyViewPager extends ViewPager {
 
@@ -70,18 +70,18 @@ public class MyViewPager extends ViewPager {
 
             }
             case 2: {
-                DailyGraphFragment fragment = (DailyGraphFragment) mHomeActivity.getDaysPagerAdapter().instantiateItem(this, 2);
-                List<View> charts = new ArrayList<>();
-                charts.add(fragment.getView().findViewById(R.id.forecast_chart_humidity));
-                charts.add(fragment.getView().findViewById(R.id.forecast_chart_pressure));
-                charts.add(fragment.getView().findViewById(R.id.forecast_chart_rain_chance));
-                charts.add(fragment.getView().findViewById(R.id.forecast_chart_temp));
-                charts.add(fragment.getView().findViewById(R.id.forecast_chart_wind));
-                int i = 0;
-                for (View view : charts) {
-                    if (isPointInsideView(x, y, view)) i++;
-                }
-                return i == 0;
+                WeatherForecastFragment fragment = (WeatherForecastFragment) mHomeActivity.getDaysPagerAdapter().instantiateItem(this, 2);
+//                List<View> charts = new ArrayList<>();
+//                charts.add(fragment.getView().findViewById(R.id.forecast_chart_humidity));
+//                charts.add(fragment.getView().findViewById(R.id.forecast_chart_pressure));
+//                charts.add(fragment.getView().findViewById(R.id.forecast_chart_rain_chance));
+//                charts.add(fragment.getView().findViewById(R.id.forecast_chart_temp));
+//                charts.add(fragment.getView().findViewById(R.id.forecast_chart_wind));
+//                int i = 0;
+//                for (View view : charts) {
+//                    if (isPointInsideView(x, y, view)) i++;
+//                }
+                return true;
             }
         }
         return true;

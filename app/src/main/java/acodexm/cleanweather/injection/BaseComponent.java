@@ -20,8 +20,6 @@ public interface BaseComponent {
     interface Builder {
         @BindsInstance
         Builder application(BaseApp app);
-
         BaseComponent build();
-
     }
 }

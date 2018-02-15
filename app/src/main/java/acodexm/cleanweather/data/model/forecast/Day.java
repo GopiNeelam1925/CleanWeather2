@@ -1,11 +1,16 @@
 
 package acodexm.cleanweather.data.model.forecast;
 
+import android.arch.persistence.room.Entity;
+import android.arch.persistence.room.PrimaryKey;
+
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 
+@Entity
 public class Day {
-
+    @PrimaryKey(autoGenerate = true)
+    private int id;
     @SerializedName("maxtemp_c")
     @Expose
     private Double maxtempC;
@@ -52,6 +57,13 @@ public class Day {
     @Expose
     private Double uv;
 
+    public int getId() {
+        return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
+    }
     public Double getMaxtempC() {
         return maxtempC;
     }

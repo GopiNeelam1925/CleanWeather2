@@ -1,6 +1,8 @@
 package acodexm.cleanweather.view.fragments;
 
 
+import android.arch.lifecycle.ViewModelProvider;
+import android.arch.lifecycle.ViewModelProviders;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
@@ -16,7 +18,6 @@ import android.support.v4.app.Fragment;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.widget.AppCompatImageView;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -38,19 +39,25 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 
+import javax.inject.Inject;
+
 import acodexm.cleanweather.R;
-import acodexm.cleanweather.model.openweathermap.WeatherData;
+import acodexm.cleanweather.data.model.WeatherData;
+import acodexm.cleanweather.data.model.forecast.Day;
+import acodexm.cleanweather.injection.Injectable;
 import acodexm.cleanweather.util.Constants;
 import acodexm.cleanweather.util.DataValueFormatter;
 import acodexm.cleanweather.util.WeatherUtils;
 import acodexm.cleanweather.util.XAxisAsDaysFormatter;
 import acodexm.cleanweather.util.XAxisAsHoursFormatter;
 import acodexm.cleanweather.view.activities.HomeActivity;
+import acodexm.cleanweather.view.viewmodel.WeatherDataViewModel;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
+import timber.log.Timber;
 
-public class HomeFragment extends Fragment {
+public class HomeFragment extends Fragment implements Injectable {
     private static final String TAG = HomeFragment.class.getSimpleName();
     @BindView(R.id.text_city)
     protected TextView mLocation;
@@ -86,18 +93,16 @@ public class HomeFragment extends Fragment {
     private SharedPreferences mPreferences;
     private int days;
     private boolean isCelsius;
+    private WeatherDataViewModel dataViewModel;
+    @Inject
+    ViewModelProvider.Factory modelFactory;
 
     public HomeFragment() {
     }
 
     public static HomeFragment newInstance(int sectionNumber, WeatherData weatherData) {
-        Log.d(TAG, "newInstance: "+weatherData.toString());
-        HomeFragment fragment = new HomeFragment();
-        Bundle args = new Bundle();
-        args.putInt(Constants.ARG_SECTION_NUMBER, sectionNumber);
-        args.putSerializable(Constants.WEATHER_DATA, weatherData);
-        fragment.setArguments(args);
-        return fragment;
+        Timber.d("newInstance: %s", weatherData.toString());
+        return new HomeFragment();
     }
 
 
@@ -105,12 +110,10 @@ public class HomeFragment extends Fragment {
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
 
-        if (getArguments() != null) {
-            mWeatherData = (WeatherData) getArguments().getSerializable(Constants.WEATHER_DATA);
-            Log.d(TAG, "onCreateView.getArguments: mWeatherData" + mWeatherData.toString());
-        }
         View rootView = inflater.inflate(R.layout.fragment_weather, container, false);
         ButterKnife.bind(this, rootView);
+        dataViewModel = ViewModelProviders.of(this, modelFactory).get(WeatherDataViewModel.class);
+        mWeatherData = dataViewModel.getWeatherData().getValue();
         mPreferences = PreferenceManager.getDefaultSharedPreferences(getContext());
         days = Integer.valueOf(mPreferences.getString(Constants.SETTING_DAY_LIST, 7 + ""));
         isCelsius = mPreferences.getBoolean(Constants.SETTING_TEMP_UNIT, false);
@@ -119,7 +122,7 @@ public class HomeFragment extends Fragment {
                 -> new Handler().postDelayed(this::updateWeather, 1000));
         boolean isCelsius = mPreferences.getBoolean(Constants.SETTING_TEMP_UNIT, false);
         if (mWeatherData != null) {
-            Log.d(TAG, "onCreateView: mWeatherData" + mWeatherData.toString());
+            Timber.d(TAG, "onCreateView: mWeatherData" + mWeatherData.toString());
             setChartSettings();
             setupWeather(mWeatherData, isCelsius);
         }
@@ -153,22 +156,23 @@ public class HomeFragment extends Fragment {
     }
 
 
-    public void setupWeather(WeatherData WeatherData, boolean isCelsius) {
+    public void setupWeather(WeatherData weatherData, boolean isCelsius) {
         int position = 0;
-        mTemp.setText(WeatherData.getWeatherDataDaily().getList().get(position).getTemp().getDay().toString());
-        mTempMin.setText("|" + WeatherData.getWeatherDataDaily().getList().get(position).getTemp().getMin().toString());
+        Day day = weatherData.getWeatherDataForecast().getForecast().getForecastday().get(position).getDay();
+        mTemp.setText(day.getAvgtempC().toString());
+        mTempMin.setText("|" + day.getMintempC().toString());
         mTempUnit.setText(isCelsius ? "\u00b0F" : "\u00b0C");
-        mLocation.setText(WeatherData.getWeatherDataDaily().getCity().getName());
+        mLocation.setText(weatherData.getLocation());
         mWeatherCondition.setText(
-                WeatherData.getWeatherDataDaily().getList().get(position).getWeather().get(0).getDescription());
+                day.getCondition().getText());
         mImageWeather.setImageResource(WeatherUtils.convertIconToResource(
-                WeatherData.getWeatherDataDaily().getList().get(position).getWeather().get(0).getIcon()));
+                day.getCondition().getIcon()));
         mLinearLayout.setBackgroundColor(getResources().getColor(WeatherUtils.convertIconToBackground(
-                WeatherData.getWeatherDataDaily().getList().get(position).getWeather().get(0).getIcon())));
-        Date date = new Date(WeatherData.getWeatherDataDaily().getList().get(position).getDt() * 1000L);
+                day.getCondition().getIcon())));
+        Date date = new Date(weatherData.getWeatherDataCurrent().getCurrent().getLastUpdated());
         mDate.setText(mSimpleDateFormat.format(date));
         mTime.setText(mSimpleTimeFormat.format(new Date()));
-        Log.d("Fragment setup", "Completed");
+        Timber.d("Fragment setup Completed");
 
     }
 
@@ -200,12 +204,12 @@ public class HomeFragment extends Fragment {
 
         switch (chartType) {
             case Constants.CHART_DAYS:
-                xAxis.setValueFormatter(new XAxisAsDaysFormatter(weatherData.getWeatherDataDaily()));
+                xAxis.setValueFormatter(new XAxisAsDaysFormatter(weatherData.getWeatherDataForecast()));
                 chart.zoom(zoomXAxis(), 0, 0, 0);
                 chart.setData(generateDataLine(weatherData, days, chartType));
                 break;
             case Constants.CHART_HOURS:
-                xAxis.setValueFormatter(new XAxisAsHoursFormatter(weatherData.getWeatherDataHourly()));
+                xAxis.setValueFormatter(new XAxisAsHoursFormatter(weatherData.getWeatherDataCurrent()));
                 chart.zoom(4.8f, 0, 0, 0);
                 chart.setData(generateDataLine(weatherData, days, chartType));
                 break;
@@ -219,18 +223,18 @@ public class HomeFragment extends Fragment {
         ArrayList<Entry> values = new ArrayList<>();
         switch (chartType) {
             case Constants.CHART_DAYS:
-                for (int i = 0; i < days; i++) {
-                    values.add(new Entry(i, weatherData.getWeatherDataDaily().getList().get(i).getTemp().getDay().floatValue(),
-                            getResources().getDrawable(WeatherUtils.convertIconToResource(
-                                    weatherData.getWeatherDataDaily().getList().get(i).getWeather().get(0).getIcon()))));
-                }
+//                for (int i = 0; i < days; i++) {
+//                    values.add(new Entry(i, weatherData.getWeatherDataForecast().getForecast().getForecastday().get(i).getDay().getAvgtempC(),
+//                            getResources().getDrawable(WeatherUtils.convertIconToResource(
+//                                    weatherData.getWeatherDataForecast().getForecast().getForecastday().get(i).getDay().getCondition().getIcon()))));
+//                }
                 break;
             case Constants.CHART_HOURS:
-                for (int i = 0; i < weatherData.getWeatherDataHourly().getList().size(); i++) {
-                    values.add(new Entry(i, weatherData.getWeatherDataHourly().getList().get(i).getMain().getTemp().floatValue(),
-                            getResources().getDrawable(WeatherUtils.convertIconToResource(
-                                    weatherData.getWeatherDataHourly().getList().get(i).getWeather().get(0).getIcon()))));
-                }
+//                for (int i = 0; i < weatherData.getWeatherDataHourly().getList().size(); i++) {
+//                    values.add(new Entry(i, weatherData.getWeatherDataHourly().getList().get(i).getMain().getTemp().floatValue(),
+//                            getResources().getDrawable(WeatherUtils.convertIconToResource(
+//                                    weatherData.getWeatherDataHourly().getList().get(i).getWeather().get(0).getIcon()))));
+//                }
                 break;
 
         }
@@ -267,7 +271,7 @@ public class HomeFragment extends Fragment {
     }
 
     private float zoomXAxis() {
-        switch (mWeatherData.getWeatherDataDaily().getList().size()) {
+        switch (mWeatherData.getWeatherDataForecast().getForecast().getForecastday().size()) {
             case 1:
                 return 1f;
             case 2:

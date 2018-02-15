@@ -1,6 +1,8 @@
 package acodexm.cleanweather.view.fragments;
 
 
+import android.arch.lifecycle.ViewModelProvider;
+import android.arch.lifecycle.ViewModelProviders;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
@@ -15,7 +17,6 @@ import android.support.v4.app.Fragment;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.widget.AppCompatImageView;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -42,21 +43,26 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 
+import javax.inject.Inject;
+
 import acodexm.cleanweather.R;
-import acodexm.cleanweather.model.openweathermap.daily.WeatherDataDaily;
-import acodexm.cleanweather.model.openweathermap.hourly.WeatherDataHourly;
+import acodexm.cleanweather.data.model.WeatherData;
+import acodexm.cleanweather.data.model.current.WeatherDataCurrent;
+import acodexm.cleanweather.data.model.forecast.WeatherDataForecast;
+import acodexm.cleanweather.injection.Injectable;
 import acodexm.cleanweather.util.Constants;
 import acodexm.cleanweather.util.DataValueFormatter;
 import acodexm.cleanweather.util.WeatherUtils;
 import acodexm.cleanweather.util.XAxisAsHoursFormatter;
 import acodexm.cleanweather.util.YAxisUnitFormatter;
 import acodexm.cleanweather.view.activities.HomeActivity;
+import acodexm.cleanweather.view.viewmodel.WeatherDataViewModel;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
+import timber.log.Timber;
 
-public class HourlyGraphFragment extends Fragment {
-    private static final String TAG = HourlyGraphFragment.class.getSimpleName();
+public class HourlyGraphFragment extends Fragment implements Injectable {
     @BindView(R.id.current_chart_temp)
     protected LineChart mChartTemp;
     @BindView(R.id.current_chart_humidity)
@@ -83,25 +89,23 @@ public class HourlyGraphFragment extends Fragment {
     protected TextView mTime;
     @BindView(R.id.current_text_city)
     protected TextView mLocation;
-    private WeatherDataDaily mWeatherDataDaily;
-    private WeatherDataHourly mWeatherDataHourly;
+    private WeatherDataForecast mWeatherDataForecast;
+    private WeatherDataCurrent mWeatherDataCurrent;
     private SharedPreferences mPreferences;
     private boolean isCelsius;
-
+    private WeatherDataViewModel dataViewModel;
+    @Inject
+    ViewModelProvider.Factory modelFactory;
     private SimpleDateFormat mSimpleDateFormat = new SimpleDateFormat("MMM dd");
     private SimpleDateFormat mSimpleTimeFormat = new SimpleDateFormat("HH:mm");
 
     public HourlyGraphFragment() {
     }
 
-    public static HourlyGraphFragment newInstance(WeatherDataHourly weatherDataHourly, WeatherDataDaily weatherDataDaily) {
-        Log.d(TAG, "newInstance: "+weatherDataHourly.toString());
-        Log.d(TAG, "newInstance: "+weatherDataDaily.toString());
+    public static HourlyGraphFragment newInstance(WeatherDataCurrent weatherDataHourly, WeatherDataForecast weatherDataDaily) {
+        Timber.d("newInstance: %s", weatherDataHourly.toString());
+        Timber.d("newInstance: %s", weatherDataDaily.toString());
         HourlyGraphFragment fragment = new HourlyGraphFragment();
-        Bundle args = new Bundle();
-        args.putSerializable(Constants.WEATHER_DATA_HOURLY, weatherDataHourly);
-        args.putSerializable(Constants.WEATHER_DATA, weatherDataDaily);
-        fragment.setArguments(args);
         return fragment;
     }
 
@@ -109,19 +113,21 @@ public class HourlyGraphFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        if (getArguments() != null) {
-            mWeatherDataHourly = (WeatherDataHourly) getArguments().getSerializable(Constants.WEATHER_DATA_HOURLY);
-            mWeatherDataDaily = (WeatherDataDaily) getArguments().getSerializable(Constants.WEATHER_DATA);
-        }
+
         View rootView = inflater.inflate(R.layout.fragment_weather_hourly_graph, container, false);
         ButterKnife.bind(this, rootView);
         mPreferences = PreferenceManager.getDefaultSharedPreferences(getContext());
-
+        dataViewModel = ViewModelProviders.of(this, modelFactory).get(WeatherDataViewModel.class);
+        WeatherData weatherData = dataViewModel.getWeatherData().getValue();
+        if (weatherData != null) {
+            mWeatherDataCurrent = weatherData.getWeatherDataCurrent();
+            mWeatherDataForecast = weatherData.getWeatherDataForecast();
+        }
         mSwipeRefreshLayout.setColorSchemeResources(R.color.orange, R.color.blue, R.color.green);
         mSwipeRefreshLayout.setOnRefreshListener(() -> new Handler().postDelayed(this::updateWeather, 1000));
         isCelsius = mPreferences.getBoolean(Constants.SETTING_TEMP_UNIT, false);
-        if (mWeatherDataDaily != null)
-            setupWeather(mWeatherDataDaily);
+        if (mWeatherDataForecast != null)
+            setupWeather(mWeatherDataForecast);
         setChartSettings();
         return rootView;
     }
@@ -150,28 +156,28 @@ public class HourlyGraphFragment extends Fragment {
         vibe.vibrate(milliseconds);
     }
 
-    public void setupWeather(WeatherDataDaily weatherDataDaily) {
+    public void setupWeather(WeatherDataForecast weatherDataDaily) {
         int position = 0;
-        mLocation.setText(weatherDataDaily.getCity().getName());
-        mImageWeather.setImageResource(WeatherUtils.convertIconToResource(weatherDataDaily.getList().get(position).getWeather().get(0).getIcon()));
-        mLinearLayout.setBackgroundColor(getResources().getColor(WeatherUtils.convertIconToBackground(weatherDataDaily.getList().get(position).getWeather().get(0).getIcon())));
-        Date date = new Date(weatherDataDaily.getList().get(position).getDt() * 1000L);
+        mLocation.setText(weatherDataDaily.getLocation().getName());
+        mImageWeather.setImageResource(WeatherUtils.convertIconToResource(weatherDataDaily.getForecast().getForecastday().get(position).getDay().getCondition().getIcon()));
+        mLinearLayout.setBackgroundColor(getResources().getColor(WeatherUtils.convertIconToBackground(weatherDataDaily.getForecast().getForecastday().get(position).getDay().getCondition().getIcon())));
+        Date date = new Date(weatherDataDaily.getForecast().getForecastday().get(position).getDate());
         mDate.setText(mSimpleDateFormat.format(date));
         mTime.setText(mSimpleTimeFormat.format(new Date()));
-        Log.d("Fragment setup", "Completed");
+        Timber.d("Fragment setup Completed");
 
     }
 
     public void setChartSettings() {
-        setLineChartView(Constants.CHART_TEMP, mChartTemp, mWeatherDataHourly, isCelsius, null);
-        setBarChartView(Constants.CHART_RAIN, mChartRain, mWeatherDataHourly, "mm");
-        setLineChartView(Constants.CHART_WIND, mChartWind, mWeatherDataHourly, isCelsius, "m/s");
-        setLineChartView(Constants.CHART_PRES, mChartPres, mWeatherDataHourly, isCelsius, "mb");
-        setBarChartView(Constants.CHART_HUM, mChartHum, mWeatherDataHourly, "%");
+        setLineChartView(Constants.CHART_TEMP, mChartTemp, mWeatherDataCurrent, isCelsius, null);
+        setBarChartView(Constants.CHART_RAIN, mChartRain, mWeatherDataCurrent, "mm");
+        setLineChartView(Constants.CHART_WIND, mChartWind, mWeatherDataCurrent, isCelsius, "m/s");
+        setLineChartView(Constants.CHART_PRES, mChartPres, mWeatherDataCurrent, isCelsius, "mb");
+        setBarChartView(Constants.CHART_HUM, mChartHum, mWeatherDataCurrent, "%");
 
     }
 
-    private void setLineChartView(String chartType, LineChart chart, WeatherDataHourly weatherData, boolean isCelsius, String unit) {
+    private void setLineChartView(String chartType, LineChart chart, WeatherDataCurrent weatherData, boolean isCelsius, String unit) {
         // no description text
         chart.getDescription().setEnabled(false);
 
@@ -210,24 +216,24 @@ public class HourlyGraphFragment extends Fragment {
         chart.invalidate();
     }
 
-    private LineData generateDataLine(WeatherDataHourly weatherDataHourly, String chartType) {
+    private LineData generateDataLine(WeatherDataCurrent weatherDataHourly, String chartType) {
 
         ArrayList<Entry> values = new ArrayList<>();
         switch (chartType) {
             case Constants.CHART_TEMP:
-                for (int i = 0; i < weatherDataHourly.getList().size(); i++) {
-                    values.add(new Entry(i, weatherDataHourly.getList().get(i).getMain().getTemp().floatValue()));
-                }
+//                for (int i = 0; i < weatherDataHourly.getList().size(); i++) {
+//                    values.add(new Entry(i, weatherDataHourly.getList().get(i).getMain().getTemp().floatValue()));
+//                }
                 break;
             case Constants.CHART_WIND:
-                for (int i = 0; i < weatherDataHourly.getList().size(); i++) {
-                    values.add(new Entry(i, weatherDataHourly.getList().get(i).getWind().getSpeed().floatValue()));
-                }
+//                for (int i = 0; i < weatherDataHourly.getList().size(); i++) {
+//                    values.add(new Entry(i, weatherDataHourly.getList().get(i).getWind().getSpeed().floatValue()));
+//                }
                 break;
             case Constants.CHART_PRES:
-                for (int i = 0; i < weatherDataHourly.getList().size(); i++) {
-                    values.add(new Entry(i, weatherDataHourly.getList().get(i).getMain().getPressure().floatValue()));
-                }
+//                for (int i = 0; i < weatherDataHourly.getList().size(); i++) {
+//                    values.add(new Entry(i, weatherDataHourly.getList().get(i).getMain().getPressure().floatValue()));
+//                }
                 break;
         }
 
@@ -267,7 +273,7 @@ public class HourlyGraphFragment extends Fragment {
         return new LineData(sets);
     }
 
-    private void setBarChartView(String chartType, BarChart chart, WeatherDataHourly weatherData, String unit) {
+    private void setBarChartView(String chartType, BarChart chart, WeatherDataCurrent weatherData, String unit) {
         // no description text
         chart.getDescription().setEnabled(false);
 
@@ -305,22 +311,22 @@ public class HourlyGraphFragment extends Fragment {
         chart.invalidate();
     }
 
-    private BarData generateDataBar(WeatherDataHourly weatherDataHourly, String chartType) {
+    private BarData generateDataBar(WeatherDataCurrent weatherDataHourly, String chartType) {
 
         ArrayList<BarEntry> entries = new ArrayList<>();
         switch (chartType) {
             case Constants.CHART_RAIN:
-                for (int i = 0; i < weatherDataHourly.getList().size(); i++) {
-                    if (weatherDataHourly.getList().get(i).getRain() == null || weatherDataHourly.getList().get(i).getRain().get3h() == null)
-                        entries.add(new BarEntry(i, 0));
-                    else
-                        entries.add(new BarEntry(i, weatherDataHourly.getList().get(i).getRain().get3h().floatValue()));
-                }
+//                for (int i = 0; i < weatherDataHourly.getList().size(); i++) {
+//                    if (weatherDataHourly.getList().get(i).getRain() == null || weatherDataHourly.getList().get(i).getRain().get3h() == null)
+//                        entries.add(new BarEntry(i, 0));
+//                    else
+//                        entries.add(new BarEntry(i, weatherDataHourly.getList().get(i).getRain().get3h().floatValue()));
+//                }
                 break;
             case Constants.CHART_HUM:
-                for (int i = 0; i < weatherDataHourly.getList().size(); i++) {
-                    entries.add(new BarEntry(i, weatherDataHourly.getList().get(i).getMain().getHumidity().floatValue()));
-                }
+//                for (int i = 0; i < weatherDataHourly.getList().size(); i++) {
+//                    entries.add(new BarEntry(i, weatherDataHourly.getList().get(i).getMain().getHumidity().floatValue()));
+//                }
                 break;
         }
         Collections.sort(entries, new EntryXComparator());

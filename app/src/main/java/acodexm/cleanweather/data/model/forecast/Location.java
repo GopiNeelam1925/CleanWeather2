@@ -1,11 +1,16 @@
 
 package acodexm.cleanweather.data.model.forecast;
 
+import android.arch.persistence.room.Entity;
+import android.arch.persistence.room.PrimaryKey;
+
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 
+@Entity
 public class Location {
-
+    @PrimaryKey(autoGenerate = true)
+    private int id;
     @SerializedName("name")
     @Expose
     private String name;
@@ -31,6 +36,13 @@ public class Location {
     @Expose
     private String localtime;
 
+    public int getId() {
+        return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
+    }
     public String getName() {
         return name;
     }
