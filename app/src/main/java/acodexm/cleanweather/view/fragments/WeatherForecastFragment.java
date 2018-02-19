@@ -1,6 +1,5 @@
 package acodexm.cleanweather.view.fragments;
 
-import android.arch.lifecycle.ViewModelProvider;
 import android.arch.lifecycle.ViewModelProviders;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
@@ -16,14 +15,14 @@ import android.view.ViewGroup;
 import javax.inject.Inject;
 
 import acodexm.cleanweather.R;
-import acodexm.cleanweather.data.model.WeatherData;
 import acodexm.cleanweather.injection.Injectable;
+import acodexm.cleanweather.injection.ViewModelFactory;
 import acodexm.cleanweather.view.viewmodel.WeatherDataViewModel;
 import timber.log.Timber;
 
 public class WeatherForecastFragment extends Fragment implements Injectable {
     @Inject
-    ViewModelProvider.Factory viewModelFactory;
+    ViewModelFactory viewModelFactory;
     private WeatherDataAdapter adapter;
     private WeatherDataViewModel weatherDataViewModel;
 
@@ -33,10 +32,13 @@ public class WeatherForecastFragment extends Fragment implements Injectable {
 //        Toast.makeText(getContext(), "Clicked:" + data.getName(), Toast.LENGTH_LONG).show();
 //    };
 
-    public static Fragment newInstance(WeatherData weatherData) {
-        Timber.d("newInstance: " + weatherData.toString());
-        return new WeatherForecastFragment();
+    public WeatherForecastFragment() {
     }
+
+//    public static Fragment newInstance(WeatherData weatherData) {
+//        Timber.d("newInstance: " + weatherData.toString());
+//        return new WeatherForecastFragment();
+//    }
 
     @Nullable
     @Override
@@ -44,9 +46,11 @@ public class WeatherForecastFragment extends Fragment implements Injectable {
         View view = inflater.inflate(R.layout.fragment_list_forecast, container, false);
         setupRecyclerView(view);
         weatherDataViewModel = ViewModelProviders.of(this, viewModelFactory).get(WeatherDataViewModel.class);
-        weatherDataViewModel.getWeatherData().observe(this, data -> {
-            Timber.d("WeatherData Changed:%s", data);
-            adapter.setItems(data);
+        weatherDataViewModel.getWeatherData("Warszawa").observe(this, data -> {
+            if (data != null) {
+                Timber.d("WeatherData Changed:%s", data);
+                adapter.setItems(data);
+            }
         });
         return view;
     }

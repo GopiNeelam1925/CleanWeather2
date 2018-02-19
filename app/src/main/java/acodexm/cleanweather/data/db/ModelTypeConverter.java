@@ -13,7 +13,7 @@ import java.lang.reflect.Type;
 import java.util.Collections;
 import java.util.List;
 
-import acodexm.cleanweather.data.model.forecast.Forecastday;
+import acodexm.cleanweather.data.model.forecast.ForecastDay;
 
 public class ModelTypeConverter {
 
@@ -28,20 +28,20 @@ public class ModelTypeConverter {
     }
 
     @TypeConverter
-    public static List<Forecastday> stringToSomeObjectList(String data) {
+    public static List<ForecastDay> stringToSomeObjectList(String data) {
         if (data == null) {
             return Collections.emptyList();
         }
         Gson gson = new Gson();
-        Type listType = new TypeToken<List<Forecastday>>() {
+        Type listType = new TypeToken<List<ForecastDay>>() {
         }.getType();
         return gson.fromJson(data, listType);
     }
 
     @TypeConverter
-    public static String someObjectListToString(List<Forecastday> forecastdays) {
+    public static String someObjectListToString(List<ForecastDay> forecastDays) {
         Gson gson = new Gson();
-        return gson.toJson(forecastdays);
+        return gson.toJson(forecastDays);
     }
 //
 //    @TypeConverter

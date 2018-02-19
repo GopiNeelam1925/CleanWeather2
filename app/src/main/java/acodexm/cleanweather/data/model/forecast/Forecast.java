@@ -13,15 +13,21 @@ public class Forecast {
 
     @SerializedName("forecastday")
     @Expose
-    private List<Forecastday> forecastday = null;
+    private List<ForecastDay> forecastDay = null;
 
 
-    public List<Forecastday> getForecastday() {
-        return forecastday;
+    public List<ForecastDay> getForecastDay() {
+        return forecastDay;
     }
 
-    public void setForecastday(List<Forecastday> forecastday) {
-        this.forecastday = forecastday;
+    public void setForecastDay(List<ForecastDay> forecastDay) {
+        this.forecastDay = forecastDay;
     }
 
+    @Override
+    public String toString() {
+        return "Forecast{" +
+                "forecastDay=" + forecastDay +
+                '}';
+    }
 }

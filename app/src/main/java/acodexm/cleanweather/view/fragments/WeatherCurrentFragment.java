@@ -1,7 +1,6 @@
 package acodexm.cleanweather.view.fragments;
 
 
-import android.arch.lifecycle.ViewModelProvider;
 import android.arch.lifecycle.ViewModelProviders;
 import android.content.ComponentName;
 import android.content.Context;
@@ -43,13 +42,13 @@ import javax.inject.Inject;
 
 import acodexm.cleanweather.R;
 import acodexm.cleanweather.data.model.WeatherData;
-import acodexm.cleanweather.data.model.forecast.Day;
+import acodexm.cleanweather.data.model.forecast.ForecastDay;
 import acodexm.cleanweather.injection.Injectable;
+import acodexm.cleanweather.injection.ViewModelFactory;
 import acodexm.cleanweather.util.Constants;
 import acodexm.cleanweather.util.DataValueFormatter;
 import acodexm.cleanweather.util.WeatherUtils;
 import acodexm.cleanweather.util.XAxisAsDaysFormatter;
-import acodexm.cleanweather.util.XAxisAsHoursFormatter;
 import acodexm.cleanweather.view.activities.HomeActivity;
 import acodexm.cleanweather.view.viewmodel.WeatherDataViewModel;
 import butterknife.BindView;
@@ -57,8 +56,8 @@ import butterknife.ButterKnife;
 import butterknife.OnClick;
 import timber.log.Timber;
 
-public class HomeFragment extends Fragment implements Injectable {
-    private static final String TAG = HomeFragment.class.getSimpleName();
+public class WeatherCurrentFragment extends Fragment implements Injectable {
+    private static final String TAG = WeatherCurrentFragment.class.getSimpleName();
     @BindView(R.id.text_city)
     protected TextView mLocation;
     @BindView(R.id.text_desc)
@@ -85,9 +84,17 @@ public class HomeFragment extends Fragment implements Injectable {
     protected SwipeRefreshLayout mSwipeRefreshLayout;
     @BindView(R.id.main_chart_icons)
     protected LineChart mChartIconsDaily;
-    @BindView(R.id.main_chart_icons_hourly)
-    protected LineChart mChartIconsHourly;
-    private WeatherData mWeatherData;
+    @BindView(R.id.detail_text_pressure)
+    protected TextView mPressure;
+    @BindView(R.id.detail_text_humidity)
+    protected TextView mHumidity;
+    @BindView(R.id.detail_text_wind)
+    protected TextView mWind;
+    @BindView(R.id.detail_text_sunset)
+    protected TextView mSunset;
+    @BindView(R.id.detail_text_sundown)
+    protected TextView mSundown;
+
     private SimpleDateFormat mSimpleDateFormat = new SimpleDateFormat("MMM dd");
     private SimpleDateFormat mSimpleTimeFormat = new SimpleDateFormat("HH:mm");
     private SharedPreferences mPreferences;
@@ -95,14 +102,10 @@ public class HomeFragment extends Fragment implements Injectable {
     private boolean isCelsius;
     private WeatherDataViewModel dataViewModel;
     @Inject
-    ViewModelProvider.Factory modelFactory;
+    ViewModelFactory modelFactory;
 
-    public HomeFragment() {
-    }
 
-    public static HomeFragment newInstance(int sectionNumber, WeatherData weatherData) {
-        Timber.d("newInstance: %s", weatherData.toString());
-        return new HomeFragment();
+    public WeatherCurrentFragment() {
     }
 
 
@@ -113,7 +116,7 @@ public class HomeFragment extends Fragment implements Injectable {
         View rootView = inflater.inflate(R.layout.fragment_weather, container, false);
         ButterKnife.bind(this, rootView);
         dataViewModel = ViewModelProviders.of(this, modelFactory).get(WeatherDataViewModel.class);
-        mWeatherData = dataViewModel.getWeatherData().getValue();
+
         mPreferences = PreferenceManager.getDefaultSharedPreferences(getContext());
         days = Integer.valueOf(mPreferences.getString(Constants.SETTING_DAY_LIST, 7 + ""));
         isCelsius = mPreferences.getBoolean(Constants.SETTING_TEMP_UNIT, false);
@@ -121,11 +124,13 @@ public class HomeFragment extends Fragment implements Injectable {
         mSwipeRefreshLayout.setOnRefreshListener(()
                 -> new Handler().postDelayed(this::updateWeather, 1000));
         boolean isCelsius = mPreferences.getBoolean(Constants.SETTING_TEMP_UNIT, false);
-        if (mWeatherData != null) {
-            Timber.d(TAG, "onCreateView: mWeatherData" + mWeatherData.toString());
-            setChartSettings();
-            setupWeather(mWeatherData, isCelsius);
-        }
+        dataViewModel.getWeatherData("Warszawa").observe(this, data -> {
+            if (data != null) {
+                Timber.d("onCreateView: mWeatherData %s", data.toString());
+                setChartSettings(data);
+                setupWeather(data, isCelsius, 0);
+            }
+        });
         return rootView;
     }
 
@@ -156,29 +161,40 @@ public class HomeFragment extends Fragment implements Injectable {
     }
 
 
-    public void setupWeather(WeatherData weatherData, boolean isCelsius) {
-        int position = 0;
-        Day day = weatherData.getWeatherDataForecast().getForecast().getForecastday().get(position).getDay();
-        mTemp.setText(day.getAvgtempC().toString());
-        mTempMin.setText("|" + day.getMintempC().toString());
-        mTempUnit.setText(isCelsius ? "\u00b0F" : "\u00b0C");
+    public void setupWeather(WeatherData weatherData, boolean isCelsius, int position) {
+        ForecastDay forecastDay = weatherData.getWeatherDataForecast().getForecast().getForecastDay().get(position);
+
         mLocation.setText(weatherData.getLocationName());
-        mWeatherCondition.setText(
-                day.getCondition().getText());
-        mImageWeather.setImageResource(WeatherUtils.convertIconToResource(
-                day.getCondition().getIcon()));
-        mLinearLayout.setBackgroundColor(getResources().getColor(WeatherUtils.convertIconToBackground(
-                day.getCondition().getIcon())));
-        Date date = new Date(weatherData.getWeatherDataCurrent().getCurrentCurrent().getLastUpdatedCurrent());
+        mWeatherCondition.setText(forecastDay.getDay().getCondition().getText());
+        mImageWeather.setImageResource(WeatherUtils.convertCodeToResource(forecastDay.getDay().getCondition().getCode()).getIcon().getResource());
+        mLinearLayout.setBackgroundColor(getResources().getColor(WeatherUtils.convertCodeToResource(forecastDay.getDay().getCondition().getCode()).getIcon().getColor()));
+        Date date = new Date(forecastDay.getDateEpoch());
         mDate.setText(mSimpleDateFormat.format(date));
-        mTime.setText(mSimpleTimeFormat.format(new Date()));
+        mTime.setText(mSimpleTimeFormat.format(date));
+        if (position == 0)
+            mPressure.setText(weatherData.getWeatherDataForecast().getCurrent().getPressureMb() + "Mb");
+        else
+            mPressure.setVisibility(View.GONE);
+        mHumidity.setText(forecastDay.getDay().getAvghumidity() + "%");
+        if (isCelsius) {
+            mWind.setText(forecastDay.getDay().getMaxwindKph() + "Km/h");
+            mTemp.setText(forecastDay.getDay().getAvgtempC().toString());
+            mTempMin.setText("|" + forecastDay.getDay().getMintempC().toString());
+            mTempUnit.setText("\u00b0C");
+        } else {
+            mWind.setText(forecastDay.getDay().getMaxwindMph() + "Mph");
+            mTemp.setText(forecastDay.getDay().getAvgtempF().toString());
+            mTempMin.setText("|" + forecastDay.getDay().getMintempF().toString());
+            mTempUnit.setText("\u00b0F");
+        }
+        mSunset.setText(mSimpleDateFormat.format(new Date(forecastDay.getDateEpoch())));
+        mSundown.setText(mSimpleDateFormat.format(new Date(forecastDay.getDateEpoch())));
         Timber.d("Fragment setup Completed");
 
     }
 
-    public void setChartSettings() {
-        setLineChartView(Constants.CHART_DAYS, mChartIconsDaily, mWeatherData, days, isCelsius, null);
-        setLineChartView(Constants.CHART_HOURS, mChartIconsHourly, mWeatherData, days, isCelsius, null);
+    public void setChartSettings(WeatherData weatherData) {
+        setLineChartView(Constants.CHART_DAYS, mChartIconsDaily, weatherData, days, isCelsius, null);
     }
 
     private void setLineChartView(String chartType, LineChart chart, WeatherData weatherData, int days, boolean isCelsius, String unit) {
@@ -205,12 +221,7 @@ public class HomeFragment extends Fragment implements Injectable {
         switch (chartType) {
             case Constants.CHART_DAYS:
                 xAxis.setValueFormatter(new XAxisAsDaysFormatter(weatherData.getWeatherDataForecast()));
-                chart.zoom(zoomXAxis(), 0, 0, 0);
-                chart.setData(generateDataLine(weatherData, days, chartType));
-                break;
-            case Constants.CHART_HOURS:
-                xAxis.setValueFormatter(new XAxisAsHoursFormatter(weatherData.getWeatherDataCurrent()));
-                chart.zoom(4.8f, 0, 0, 0);
+                chart.zoom(zoomXAxis(weatherData), 0, 0, 0);
                 chart.setData(generateDataLine(weatherData, days, chartType));
                 break;
 
@@ -223,18 +234,11 @@ public class HomeFragment extends Fragment implements Injectable {
         ArrayList<Entry> values = new ArrayList<>();
         switch (chartType) {
             case Constants.CHART_DAYS:
-//                for (int i = 0; i < days; i++) {
-//                    values.add(new Entry(i, weatherData.getWeatherDataForecast().getForecast().getForecastday().get(i).getDay().getAvgtempC(),
-//                            getResources().getDrawable(WeatherUtils.convertIconToResource(
-//                                    weatherData.getWeatherDataForecast().getForecast().getForecastday().get(i).getDay().getConditionCurrentCurrent().getIconCurrent()))));
-//                }
-                break;
-            case Constants.CHART_HOURS:
-//                for (int i = 0; i < weatherData.getWeatherDataHourly().getList().size(); i++) {
-//                    values.add(new Entry(i, weatherData.getWeatherDataHourly().getList().get(i).getMain().getTemp().floatValue(),
-//                            getResources().getDrawable(WeatherUtils.convertIconToResource(
-//                                    weatherData.getWeatherDataHourly().getList().get(i).getWeather().get(0).getIconCurrent()))));
-//                }
+                for (int i = 0; i < weatherData.getWeatherDataForecast().getForecast().getForecastDay().size(); i++) {
+                    values.add(new Entry(i, weatherData.getWeatherDataForecast().getForecast().getForecastDay().get(i).getDay().getAvgtempC().floatValue(),
+                            getResources().getDrawable(WeatherUtils.convertCodeToResource(
+                                    weatherData.getWeatherDataForecast().getForecast().getForecastDay().get(i).getDay().getCondition().getCode()).getIcon().getResource())));
+                }
                 break;
 
         }
@@ -270,8 +274,8 @@ public class HomeFragment extends Fragment implements Injectable {
         return new LineData(sets);
     }
 
-    private float zoomXAxis() {
-        switch (mWeatherData.getWeatherDataForecast().getForecast().getForecastday().size()) {
+    private float zoomXAxis(WeatherData weatherData) {
+        switch (weatherData.getWeatherDataForecast().getForecast().getForecastDay().size()) {
             case 1:
                 return 1f;
             case 2:

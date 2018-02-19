@@ -11,7 +11,7 @@
     <string name="switch_temp_summary">Celsius i Metery/Fahrenheit i Mile</string>
     <string name="pressure_unit">mb</string>
     <string name="procentage">%</string>
-    <string name="setting_day_list_summary">Wybierz od 1 do 16 dni prognozy pogody</string>
+    <string name="setting_day_list_summary">Wybierz od 1 do 7 dni prognozy pogody</string>
     <string name="setting_day_list_title">Wybierz ilość dni</string>
     <string name="get_weather_here">Pogoda w otoczeniu</string>
     <string name="error_message">Coś poszło nie tak! Sprawdź internet</string>
@@ -24,7 +24,7 @@
     <string name="pressure">Ciśnienie</string>
     <string name="humidity">Wilgotność</string>
     <string name="page_one">Teraz</string>
-    <string name="page_two">Szczegółowo</string>
+    <string name="page_two">Jutro</string>
     <string name="page_tree_start">Następne</string>
     <string name="page_tree_end">dni</string>
     <string name="add_city">Dodaj miasto…</string>

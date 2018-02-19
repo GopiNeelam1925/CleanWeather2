@@ -5,7 +5,6 @@ import android.Manifest;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.SearchManager;
-import android.arch.lifecycle.ViewModelProvider;
 import android.arch.lifecycle.ViewModelProviders;
 import android.content.Context;
 import android.content.Intent;
@@ -51,16 +50,14 @@ import java.util.TimerTask;
 import javax.inject.Inject;
 
 import acodexm.cleanweather.R;
-import acodexm.cleanweather.data.model.WeatherData;
 import acodexm.cleanweather.gps.MyLocationListener;
+import acodexm.cleanweather.injection.ViewModelFactory;
 import acodexm.cleanweather.util.Constants;
-import acodexm.cleanweather.util.WeatherUtils;
 import acodexm.cleanweather.view.custom.MyViewPager;
 import acodexm.cleanweather.view.custom.ZoomOutPageTransformer;
 import acodexm.cleanweather.view.fragments.DaysPagerAdapter;
-import acodexm.cleanweather.view.fragments.HomeFragment;
-import acodexm.cleanweather.view.fragments.HourlyGraphFragment;
 import acodexm.cleanweather.view.fragments.SidebarAdapter;
+import acodexm.cleanweather.view.fragments.WeatherCurrentFragment;
 import acodexm.cleanweather.view.fragments.WeatherForecastFragment;
 import acodexm.cleanweather.view.viewmodel.WeatherDataViewModel;
 import butterknife.BindView;
@@ -101,13 +98,14 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
     private WeatherDataViewModel dataViewModel;
 
     @Inject
-    ViewModelProvider.Factory modelFactory;
+    ViewModelFactory modelFactory;
 
     @Inject
     DispatchingAndroidInjector<Fragment> supportFragmentInjector;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
+
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         ButterKnife.bind(this);
@@ -146,7 +144,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
     }
 
     public int setAmountOfDays() {
-        return mSharedPreferences.getInt(Constants.SETTING_DAY_LIST, 7);
+        return Integer.valueOf(mSharedPreferences.getString(Constants.SETTING_DAY_LIST, 7 + ""));
     }
 
 //    public String setUnits() {
@@ -180,29 +178,27 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
 //    }
 
 
-    public void setWeatherView(WeatherData weatherData) {
-        mSidebarAdapter.addSidebarListItem(weatherData.getLocationName());
-        showFragments(weatherData, createFragments(weatherData));
+    public void setWeatherView() {
+//        mSidebarAdapter.addSidebarListItem(weatherData.getLocationName());
+        showFragments(createFragments());
     }
 
 
-    private List<Fragment> createFragments(WeatherData weatherData) {
+    private List<Fragment> createFragments() {
         List<Fragment> fragments = new ArrayList<>();
-        fragments.add(HomeFragment.newInstance(0, weatherData));
-        fragments.add(HourlyGraphFragment.newInstance(weatherData.getWeatherDataCurrent(),
-                weatherData.getWeatherDataForecast()));
-        fragments.add(WeatherForecastFragment.newInstance(weatherData));
+        fragments.add(new WeatherCurrentFragment(0));
+        fragments.add(new WeatherCurrentFragment(1));
+        fragments.add(new WeatherForecastFragment());
         Timber.d("createFragments new List<Fragment>.size() is %s", fragments.size());
         return fragments;
     }
 
-    private void showFragments(WeatherData weatherData, List<Fragment> fragments) {
+    private void showFragments(List<Fragment> fragments) {
         mDaysPagerAdapter = new DaysPagerAdapter(getSupportFragmentManager(), fragments, this);
         mViewPager.setAdapter(mDaysPagerAdapter);
         mViewPager.setPageTransformer(true, new ZoomOutPageTransformer());
         mTabLayout.setupWithViewPager(mViewPager);
-        mTabLayout.getTabAt(0).setIcon(WeatherUtils.convertIconToResource(
-                weatherData.getWeatherDataForecast().getForecast().getForecastday().get(0).getDay().getCondition().getIcon()));
+        mTabLayout.getTabAt(0).setIcon(R.drawable.ic_sun_cloudy);
         mTabLayout.getTabAt(1).setIcon(R.drawable.ic_cloud_details);
         mTabLayout.getTabAt(2).setIcon(R.drawable.ic_chart);
         mViewPager.setVisibility(View.VISIBLE);
@@ -306,6 +302,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
     @Override
     protected void onResume() {
         super.onResume();
+        setWeatherView();
 //        if (mWeatherData != null) {
 //            setWeatherView(mWeatherData);
 //            Timber.d(TAG, "onResume Activity" + " " + "creating view from saved instance?");
@@ -403,7 +400,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
         if (isOnline())
             dataViewModel.getWeather(location, setAmountOfDays(), "pl");
         else {
-            setWeatherView(dataViewModel.getWeatherData().getValue());
+            setWeatherView();
             Toast.makeText(this, R.string.offline_message, Toast.LENGTH_SHORT).show();
         }
     }

@@ -84,4 +84,16 @@ public class SearchData {
         this.url = url;
     }
 
+    @Override
+    public String toString() {
+        return "SearchData{" +
+                "id=" + id +
+                ", name='" + name + '\'' +
+                ", region='" + region + '\'' +
+                ", country='" + country + '\'' +
+                ", lat=" + lat +
+                ", lon=" + lon +
+                ", url='" + url + '\'' +
+                '}';
+    }
 }

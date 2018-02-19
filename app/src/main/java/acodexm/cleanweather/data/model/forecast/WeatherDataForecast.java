@@ -61,4 +61,13 @@ public class WeatherDataForecast {
         this.forecast = forecast;
     }
 
+    @Override
+    public String toString() {
+        return "WeatherDataForecast{" +
+                "weatherForecastID=" + weatherForecastID +
+                ", location=" + location +
+                ", current=" + current +
+                ", forecast=" + forecast +
+                '}';
+    }
 }

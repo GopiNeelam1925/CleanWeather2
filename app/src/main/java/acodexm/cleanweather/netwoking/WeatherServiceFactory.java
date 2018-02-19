@@ -3,6 +3,7 @@ package acodexm.cleanweather.netwoking;
 import org.threeten.bp.LocalDateTime;
 
 import acodexm.cleanweather.data.model.WeatherData;
+import acodexm.cleanweather.data.model.forecast.WeatherDataForecast;
 import acodexm.cleanweather.util.Constants;
 import rx.Observable;
 import rx.Subscriber;
@@ -19,17 +20,12 @@ public class WeatherServiceFactory {
     }
 
     public Subscription getWeather(String location, int days, String lang, final GetDataCallback callback) {
-        Observable<WeatherData> weatherData;
-        weatherData = Observable.zip(
-                mWeatherService.getWeatherData(Constants.API_KEY, location, lang),
-                mWeatherService.getWeatherDataForecast(Constants.API_KEY, location, days, lang),
-                (weatherDataCurrent, weatherDataForecast) -> new WeatherData(weatherDataCurrent,
-                        weatherDataForecast, LocalDateTime.now(), weatherDataCurrent.getLocationCurrent().getNameCurrent()));
-
+        Observable<WeatherDataForecast> weatherData;
+        weatherData = mWeatherService.getWeatherDataForecast(Constants.API_KEY, location, days, lang);
         return weatherData
                 .subscribeOn(Schedulers.io())
                 .observeOn(Schedulers.io())
-                .subscribe(new Subscriber<WeatherData>() {
+                .subscribe(new Subscriber<WeatherDataForecast>() {
                     @Override
                     public void onCompleted() {
                         Timber.d("All data received");
@@ -42,9 +38,9 @@ public class WeatherServiceFactory {
                     }
 
                     @Override
-                    public void onNext(WeatherData weatherData) {
+                    public void onNext(WeatherDataForecast weatherData) {
                         Timber.d(weatherData.toString());
-                        callback.onSuccess(weatherData);
+                        callback.onSuccess(new WeatherData(weatherData, LocalDateTime.now()));
 
                     }
                 });

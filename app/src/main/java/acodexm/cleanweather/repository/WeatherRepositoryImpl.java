@@ -8,6 +8,7 @@ import acodexm.cleanweather.data.dao.WeatherDao;
 import acodexm.cleanweather.data.model.WeatherData;
 import acodexm.cleanweather.netwoking.WeatherServiceFactory;
 import io.reactivex.Completable;
+import timber.log.Timber;
 
 
 public class WeatherRepositoryImpl implements WeatherRepository {
@@ -15,7 +16,6 @@ public class WeatherRepositoryImpl implements WeatherRepository {
     WeatherServiceFactory mService;
     @Inject
     WeatherDao weatherDao;
-    private String location;
 
     public WeatherRepositoryImpl(WeatherDao weatherDao) {
         this.weatherDao = weatherDao;
@@ -26,11 +26,12 @@ public class WeatherRepositoryImpl implements WeatherRepository {
         if (weatherData == null) {
             return Completable.error(new IllegalArgumentException("WeatherData cannot be null"));
         }
+        Timber.d("insert data to database %s", weatherData.toString());
         return Completable.fromAction(() -> weatherDao.addWeatherData(weatherData));
     }
 
     @Override
-    public LiveData<WeatherData> getWeatherData() {
+    public LiveData<WeatherData> getWeatherData(String location) {
         return weatherDao.getWeatherData(location);
     }
 

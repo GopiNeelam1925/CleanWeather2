@@ -52,7 +52,7 @@ public class Day {
     private Double avghumidity;
     @SerializedName("condition")
     @Expose
-    private Condition_ condition;
+    private ConditionDay condition;
     @SerializedName("uv")
     @Expose
     private Double uv;
@@ -168,11 +168,11 @@ public class Day {
         this.avghumidity = avghumidity;
     }
 
-    public Condition_ getCondition() {
+    public ConditionDay getCondition() {
         return condition;
     }
 
-    public void setCondition(Condition_ condition) {
+    public void setCondition(ConditionDay condition) {
         this.condition = condition;
     }
 
@@ -184,4 +184,25 @@ public class Day {
         this.uv = uv;
     }
 
+    @Override
+    public String toString() {
+        return "Day{" +
+                "id=" + id +
+                ", maxtempC=" + maxtempC +
+                ", maxtempF=" + maxtempF +
+                ", mintempC=" + mintempC +
+                ", mintempF=" + mintempF +
+                ", avgtempC=" + avgtempC +
+                ", avgtempF=" + avgtempF +
+                ", maxwindMph=" + maxwindMph +
+                ", maxwindKph=" + maxwindKph +
+                ", totalprecipMm=" + totalprecipMm +
+                ", totalprecipIn=" + totalprecipIn +
+                ", avgvisKm=" + avgvisKm +
+                ", avgvisMiles=" + avgvisMiles +
+                ", avghumidity=" + avghumidity +
+                ", condition=" + condition +
+                ", uv=" + uv +
+                '}';
+    }
 }

@@ -10,7 +10,7 @@
     <string name="switch_temp_summary">Celsius and Meter/Fahrenheit and Mile</string>
     <string name="pressure_unit">mb</string>
     <string name="procentage">%</string>
-    <string name="setting_day_list_summary">Set from 1 to 16 days forecast</string>
+    <string name="setting_day_list_summary">Set from 1 to 7 days forecast</string>
     <string name="setting_day_list_title">Select amount of days</string>
     <string name="get_weather_here">Get weather here</string>
     <string name="error_message">Something went wrong! Check internet connection</string>
@@ -22,8 +22,8 @@
     <string name="wind_speed">Wind Speed</string>
     <string name="pressure">Pressure</string>
     <string name="humidity">Humidity</string>
-    <string name="page_one">Current Weather</string>
-    <string name="page_two">Today\'s Details</string>
+    <string name="page_one">Today</string>
+    <string name="page_two">Tomorrow</string>
     <string name="page_tree_start">Next</string>
     <string name="page_tree_end">days</string>
     <string name="add_city">Add city…</string>
@@ -31,4 +31,5 @@
     <string name="forecast_sentence_end">days:</string>
     <string name="next_days">Next days:</string>
     <string name="next_hours">Next hours:</string>
+    <string name="details">Details:</string>
 </resources>

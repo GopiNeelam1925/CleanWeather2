@@ -8,11 +8,12 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import acodexm.cleanweather.R;
 import acodexm.cleanweather.data.model.WeatherData;
-import acodexm.cleanweather.data.model.forecast.Forecastday;
+import acodexm.cleanweather.data.model.forecast.ForecastDay;
 import acodexm.cleanweather.util.WeatherUtils;
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -20,7 +21,7 @@ import butterknife.ButterKnife;
 
 public class WeatherDataAdapter extends RecyclerView.Adapter<WeatherDataAdapter.WeatherDataViewHolder> {
     private final Context context;
-    private List<Forecastday> items;
+    private List<ForecastDay> items;
 
     WeatherDataAdapter(Context context) {
         this.context = context;
@@ -36,22 +37,25 @@ public class WeatherDataAdapter extends RecyclerView.Adapter<WeatherDataAdapter.
 
     @Override
     public void onBindViewHolder(WeatherDataViewHolder holder, int position) {
-        Forecastday forecastday = items.get(position);
-        holder.mTextDate.setText(forecastday.getDate());
-        holder.mTextDesc.setText(forecastday.getDay().getCondition().getText());
-        holder.mTextTemp.setText(forecastday.getDay().getAvgtempC().toString());
-        holder.mWeatherIcon.setImageResource(WeatherUtils.convertIconToResource(forecastday.getDay().getCondition().getIcon()));
-        holder.itemView.setTag(forecastday);
+        ForecastDay forecastDay = items.get(position);
+        holder.mTextDate.setText(forecastDay.getDate());
+        holder.mTextDesc.setText(forecastDay.getDay().getCondition().getText());
+        holder.mTextTemp.setText(forecastDay.getDay().getAvgtempC().toString());
+        holder.mWeatherIcon.setImageResource(WeatherUtils.convertCodeToResource(forecastDay.getDay().getCondition().getCode()).getIcon().getResource());
+        holder.itemView.setTag(forecastDay);
     }
 
     @Override
     public int getItemCount() {
+        if (this.items == null)
+            this.items = new ArrayList<>();
         return items.size();
     }
 
-    void setItems(WeatherData weatherDatas) {
-        this.items = weatherDatas.getWeatherDataForecast().getForecast().getForecastday();
+    void setItems(WeatherData weatherData) {
+        this.items = weatherData.getWeatherDataForecast().getForecast().getForecastDay();
         notifyDataSetChanged();
+
     }
 
     class WeatherDataViewHolder extends RecyclerView.ViewHolder {

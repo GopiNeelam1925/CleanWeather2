@@ -7,7 +7,7 @@ import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 
 @Entity
-public class Condition_ {
+public class ConditionDay {
 
     @SerializedName("text")
     @Expose
@@ -44,4 +44,12 @@ public class Condition_ {
         this.code = code;
     }
 
+    @Override
+    public String toString() {
+        return "ConditionDay{" +
+                "text='" + text + '\'' +
+                ", icon='" + icon + '\'' +
+                ", code=" + code +
+                '}';
+    }
 }

@@ -54,4 +54,13 @@ public class Astro {
         this.moonset = moonset;
     }
 
+    @Override
+    public String toString() {
+        return "Astro{" +
+                "sunrise='" + sunrise + '\'' +
+                ", sunset='" + sunset + '\'' +
+                ", moonrise='" + moonrise + '\'' +
+                ", moonset='" + moonset + '\'' +
+                '}';
+    }
 }

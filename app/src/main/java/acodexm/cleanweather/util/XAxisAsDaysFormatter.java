@@ -22,7 +22,7 @@ public class XAxisAsDaysFormatter implements IAxisValueFormatter {
     @Override
     public String getFormattedValue(float value, AxisBase axis) {
         // "value" represents the position of the label on the axis (x or y)
-        Date date = new Date(mWeatherDataForecast.getForecast().getForecastday().get((int) value).getDate());
+        Date date = new Date(mWeatherDataForecast.getForecast().getForecastDay().get((int) value).getDateEpoch());
         return mSimpleDateFormat.format(date);
     }
 }

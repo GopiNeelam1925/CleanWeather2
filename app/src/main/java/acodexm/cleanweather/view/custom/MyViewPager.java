@@ -12,8 +12,7 @@ import java.util.List;
 
 import acodexm.cleanweather.R;
 import acodexm.cleanweather.view.activities.HomeActivity;
-import acodexm.cleanweather.view.fragments.HomeFragment;
-import acodexm.cleanweather.view.fragments.HourlyGraphFragment;
+import acodexm.cleanweather.view.fragments.WeatherCurrentFragment;
 import acodexm.cleanweather.view.fragments.WeatherForecastFragment;
 
 public class MyViewPager extends ViewPager {
@@ -43,10 +42,9 @@ public class MyViewPager extends ViewPager {
     public boolean canSwipe(float x, float y) {
         switch (mHomeActivity.getCurrentPage()) {
             case 0: {
-                HomeFragment fragment = (HomeFragment) mHomeActivity.getDaysPagerAdapter().instantiateItem(this, 0);
+                WeatherCurrentFragment fragment = (WeatherCurrentFragment) mHomeActivity.getDaysPagerAdapter().instantiateItem(this, 0);
                 List<View> charts = new ArrayList<>();
                 charts.add(fragment.getView().findViewById(R.id.main_chart_icons));
-                charts.add(fragment.getView().findViewById(R.id.main_chart_icons_hourly));
 
                 int i = 0;
                 for (View view : charts) {
@@ -55,13 +53,22 @@ public class MyViewPager extends ViewPager {
                 return i == 0;
             }
             case 1: {
-                HourlyGraphFragment fragment = (HourlyGraphFragment) mHomeActivity.getDaysPagerAdapter().instantiateItem(this, 1);
+//                HourlyGraphFragment fragment = (HourlyGraphFragment) mHomeActivity.getDaysPagerAdapter().instantiateItem(this, 1);
+//                List<View> charts = new ArrayList<>();
+//                charts.add(fragment.getView().findViewById(R.id.current_chart_humidity));
+//                charts.add(fragment.getView().findViewById(R.id.current_chart_pressure));
+//                charts.add(fragment.getView().findViewById(R.id.current_chart_rain_chance));
+//                charts.add(fragment.getView().findViewById(R.id.current_chart_temp));
+//                charts.add(fragment.getView().findViewById(R.id.current_chart_wind));
+//                int i = 0;
+//                for (View view : charts) {
+//                    if (isPointInsideView(x, y, view)) i++;
+//                }
+//                return i == 0;
+                WeatherCurrentFragment fragment = (WeatherCurrentFragment) mHomeActivity.getDaysPagerAdapter().instantiateItem(this, 1);
                 List<View> charts = new ArrayList<>();
-                charts.add(fragment.getView().findViewById(R.id.current_chart_humidity));
-                charts.add(fragment.getView().findViewById(R.id.current_chart_pressure));
-                charts.add(fragment.getView().findViewById(R.id.current_chart_rain_chance));
-                charts.add(fragment.getView().findViewById(R.id.current_chart_temp));
-                charts.add(fragment.getView().findViewById(R.id.current_chart_wind));
+                charts.add(fragment.getView().findViewById(R.id.main_chart_icons));
+
                 int i = 0;
                 for (View view : charts) {
                     if (isPointInsideView(x, y, view)) i++;

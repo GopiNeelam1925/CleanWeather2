@@ -7,7 +7,6 @@ import android.arch.persistence.room.PrimaryKey;
 
 import org.threeten.bp.LocalDateTime;
 
-import acodexm.cleanweather.data.model.current.WeatherDataCurrent;
 import acodexm.cleanweather.data.model.forecast.WeatherDataForecast;
 
 import static acodexm.cleanweather.data.model.WeatherData.TABLE_NAME;
@@ -21,20 +20,20 @@ public class WeatherData {
 
     @PrimaryKey(autoGenerate = true)
     private int weatherID;
-    @Embedded
-    private WeatherDataCurrent weatherDataCurrent;
+
     @Embedded
     private WeatherDataForecast weatherDataForecast;
     private LocalDateTime date;
     @ColumnInfo(name = LOCATION_FIELD)
     private String locationName;
 
+    public WeatherData() {
+    }
 
-    public WeatherData(WeatherDataCurrent weatherDataCurrent, WeatherDataForecast weatherDataForecast, LocalDateTime date, String locationName) {
-        this.weatherDataCurrent = weatherDataCurrent;
+    public WeatherData(WeatherDataForecast weatherDataForecast, LocalDateTime date) {
         this.weatherDataForecast = weatherDataForecast;
         this.date = date;
-        this.locationName = locationName;
+        this.locationName = weatherDataForecast.getLocation().getName();
     }
 
     public int getWeatherID() {
@@ -45,13 +44,6 @@ public class WeatherData {
         this.weatherID = weatherID;
     }
 
-    public WeatherDataCurrent getWeatherDataCurrent() {
-        return weatherDataCurrent;
-    }
-
-    public void setWeatherDataCurrent(WeatherDataCurrent weatherDataCurrent) {
-        this.weatherDataCurrent = weatherDataCurrent;
-    }
 
     public WeatherDataForecast getWeatherDataForecast() {
         return weatherDataForecast;
@@ -81,7 +73,6 @@ public class WeatherData {
     public String toString() {
         return "WeatherData{" +
                 "weatherID=" + weatherID +
-                ", weatherDataCurrent=" + weatherDataCurrent +
                 ", weatherDataForecast=" + weatherDataForecast +
                 ", date=" + date +
                 ", locationName='" + locationName + '\'' +

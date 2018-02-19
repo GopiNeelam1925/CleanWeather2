@@ -233,4 +233,29 @@ public class Current {
         this.visMiles = visMiles;
     }
 
+    @Override
+    public String toString() {
+        return "Current{" +
+                "lastUpdatedEpoch=" + lastUpdatedEpoch +
+                ", lastUpdated='" + lastUpdated + '\'' +
+                ", tempC=" + tempC +
+                ", tempF=" + tempF +
+                ", isDay=" + isDay +
+                ", condition=" + condition +
+                ", windMph=" + windMph +
+                ", windKph=" + windKph +
+                ", windDegree=" + windDegree +
+                ", windDir='" + windDir + '\'' +
+                ", pressureMb=" + pressureMb +
+                ", pressureIn=" + pressureIn +
+                ", precipMm=" + precipMm +
+                ", precipIn=" + precipIn +
+                ", humidity=" + humidity +
+                ", cloud=" + cloud +
+                ", feelslikeC=" + feelslikeC +
+                ", feelslikeF=" + feelslikeF +
+                ", visKm=" + visKm +
+                ", visMiles=" + visMiles +
+                '}';
+    }
 }

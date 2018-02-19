@@ -8,7 +8,7 @@ import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 
 @Entity
-public class Forecastday {
+public class ForecastDay {
 
     @SerializedName("date")
     @Expose
@@ -57,4 +57,13 @@ public class Forecastday {
         this.astro = astro;
     }
 
+    @Override
+    public String toString() {
+        return "ForecastDay{" +
+                "date='" + date + '\'' +
+                ", dateEpoch=" + dateEpoch +
+                ", day=" + day +
+                ", astro=" + astro +
+                '}';
+    }
 }

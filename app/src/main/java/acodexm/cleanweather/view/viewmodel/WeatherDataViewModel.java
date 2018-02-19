@@ -24,6 +24,7 @@ public class WeatherDataViewModel extends BaseViewModel {
 
     @Inject
     public WeatherDataViewModel() {
+        mSubscription = new CompositeSubscription();
     }
 
     public void getWeather(String location, int days, String lang) {
@@ -66,7 +67,7 @@ public class WeatherDataViewModel extends BaseViewModel {
 
                     @Override
                     public void onComplete() {
-                        Timber.d("onComplete - successfully added event");
+                        Timber.d("onComplete - successfully added weather to darabase");
                     }
 
                     @Override
@@ -77,8 +78,12 @@ public class WeatherDataViewModel extends BaseViewModel {
     }
 
 
-    public LiveData<WeatherData> getWeatherData() {
-        return weatherRepository.getWeatherData();
+    public LiveData<WeatherData> getWeatherData(String location) {
+        LiveData<WeatherData> data = weatherRepository.getWeatherData(location);
+        WeatherData weatherData = data.getValue();
+        if (weatherData == null) weatherData = new WeatherData();
+        Timber.d("data from db %s", weatherData.toString());
+        return data;
     }
 
     //TODO delete from sidebar adapter

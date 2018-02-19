@@ -11,7 +11,7 @@ public interface WeatherRepository {
 
     Completable addWeatherData(WeatherData weatherData);
 
-    LiveData<WeatherData> getWeatherData();
+    LiveData<WeatherData> getWeatherData(String location);
 
     Completable deleteWeatherData(WeatherData weatherData);
 
