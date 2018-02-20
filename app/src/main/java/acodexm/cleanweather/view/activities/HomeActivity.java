@@ -47,6 +47,7 @@ import javax.inject.Inject;
 
 import acodexm.cleanweather.R;
 import acodexm.cleanweather.data.model.LocationData;
+import acodexm.cleanweather.data.model.WeatherData;
 import acodexm.cleanweather.gps.MyLocationListener;
 import acodexm.cleanweather.injection.ViewModelFactory;
 import acodexm.cleanweather.util.Constants;
@@ -88,7 +89,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
     @BindView(R.id.add_city)
     protected TextView mAddCity;
     private SearchView searchView;
-    private static String location;
+    private String location;
     private String language;
     private boolean isBackButtonPressed;
     private SharedPreferences mSharedPreferences;
@@ -102,9 +103,6 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
     @Inject
     DispatchingAndroidInjector<Fragment> supportFragmentInjector;
 
-    public static String getLocation() {
-        return location;
-    }
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -119,22 +117,18 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
         mSharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
         PreferenceManager.setDefaultValues(this, R.xml.preferences, false);
         try {
-            location = locationViewModel.getCurrentLocation().getValue().getLocation();
+//            location = locationViewModel.getCurrentLocation().getValue().getLocation();
+            locationViewModel.getCurrentLocation().observe(this, locationData ->
+                    location = locationData.getLocation());
         } catch (Exception e) {
             Timber.d(e, "getLocation null exception loading temp default Warszawa");
-            locationViewModel.addLocation(new LocationData("Warszawa", LocalDateTime.now()));
-            try {
-                location = locationViewModel.getCurrentLocation().getValue().getLocation();
-            } catch (Exception e1) {
-                Timber.d(e, "Failed to load temp Warszawa");
-            }
         }
         if (checkGPSPermission() && location == null) {
             location = getGPSLocation();
         }
         language = Locale.getDefault().getLanguage();
         Timber.d("onCreate");
-        weatherViewModel.getWeather(location, 7, language);
+        weatherViewModel.fetchWeather(location, 7, language);
         mViewPager.setHomeActivity(this);
         mSidebarAdapter = new SidebarAdapter();
         mSidebarAdapter.setSidebarClickListener(this, this);
@@ -236,10 +230,11 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
         searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
             @Override
             public boolean onQueryTextSubmit(String query) {
-                mSidebarAdapter.addSidebarListItem(query);
-                weatherViewModel.getWeather(query, setAmountOfDays(), language);
+                LocationData locationData = new LocationData(query, LocalDateTime.now());
+                mSidebarAdapter.addSidebarListItem(locationData);
+                weatherViewModel.fetchWeather(query, setAmountOfDays(), language);
                 location = query;
-                locationViewModel.addLocation(new LocationData(query, LocalDateTime.now()));
+                locationViewModel.addLocation(locationData);
                 searchView.clearFocus();
                 mActionButton.show();
                 getSupportActionBar().hide();
@@ -326,9 +321,9 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
     protected void onResume() {
         super.onResume();
         Timber.d("onResume");
-        weatherViewModel.getWeatherData(location);
-        mSidebarAdapter.setSidebarListItems(weatherViewModel.getWeatherDataList().getValue());
-        mSidebarAdapter.setSidebarListItems(weatherViewModel.getWeatherDataList().getValue());
+        locationViewModel.getLocationList().observe(this,
+                dataList -> mSidebarAdapter.setSidebarListItems(dataList));
+
 //        if (mWeatherData != null) {
 //            setWeatherView(mWeatherData);
 //            Timber.d(TAG, "onResume Activity" + " " + "creating view from saved instance?");
@@ -338,11 +333,11 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
 //            Toast.makeText(this, R.string.offline_message, Toast.LENGTH_SHORT).show();
 //        } else if (!mViewLoaded && location.size() == 2 && isGeoPossibleFlag) {
 //            isGeoPossibleFlag = false;
-//            presenter.getWeather("", location, setAmountOfDays(), setUnits());
+//            presenter.fetchWeather("", location, setAmountOfDays(), setUnits());
 //            Timber.d(TAG, "onResume Activity" + " " + "creating view and getting new WeatherDataCurrent with GPS");
 //        } else if (!mViewLoaded) {
 //            Timber.d(TAG, "onResume Activity" + " " + "creating view and getting new WeatherDataCurrent");
-//            presenter.getWeather(mSearchLocation, Collections.emptyList(), setAmountOfDays(), setUnits());
+//            presenter.fetchWeather(mSearchLocation, Collections.emptyList(), setAmountOfDays(), setUnits());
 //        }
 
     }
@@ -388,14 +383,15 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
     }
 
     @Override
-    public void onSidebarListItemClick(String location) {
-
-        if (isOnline())
-            weatherViewModel.getWeather(location, setAmountOfDays(), language);
-        else {
-            setWeatherView();
-            Toast.makeText(this, R.string.offline_message, Toast.LENGTH_SHORT).show();
-        }
+    public void onSidebarListItemClick(LocationData location) {
+        locationViewModel.addLocation(location);
+//        weatherViewModel.getWeatherData(location.getLocation()).observe(this,weatherData -> setWeatherView());
+//        if (isOnline())
+//            weatherViewModel.fetchWeather(location.getLocation(), setAmountOfDays(), language);
+//        else {
+//            setWeatherView();
+//            Toast.makeText(this, R.string.offline_message, Toast.LENGTH_SHORT).show();
+//        }
     }
 
     @Override
@@ -416,11 +412,20 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
         if (drawer.isDrawerOpen(GravityCompat.START)) {
             drawer.closeDrawer(GravityCompat.START);
         }
-        weatherViewModel.getWeather(getGPSLocation(), setAmountOfDays(), language);
+        weatherViewModel.fetchWeather(getGPSLocation(), setAmountOfDays(), language);
     }
 
     @Override
-    public void deleteWeather(String location) {
-        weatherViewModel.deleteWeatherData(weatherViewModel.getWeatherData(location).getValue());
+    public void deleteWeather(WeatherData weatherData) {
+        weatherViewModel.getWeatherData(weatherData.getLocationName()).observe(this, data ->
+                weatherViewModel.deleteWeatherData(data));
+
+    }
+
+    @Override
+    public void deleteLocation(LocationData location) {
+        locationViewModel.deleteLocation(location);
+        weatherViewModel.getWeatherData(location.getLocation()).observe(this, data ->
+                weatherViewModel.deleteWeatherData(data));
     }
 }

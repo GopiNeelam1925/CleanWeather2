@@ -27,7 +27,7 @@ public class WeatherForecastFragment extends Fragment implements Injectable {
     private WeatherDataAdapter adapter;
     private WeatherDataViewModel weatherViewModel;
     private LocationDataViewModel locationViewModel;
-
+    private String location;
     public WeatherForecastFragment() {
     }
 
@@ -39,13 +39,14 @@ public class WeatherForecastFragment extends Fragment implements Injectable {
         weatherViewModel = ViewModelProviders.of(this, viewModelFactory).get(WeatherDataViewModel.class);
         locationViewModel = ViewModelProviders.of(this, viewModelFactory).get(LocationDataViewModel.class);
         Timber.d("onCreateView");
-        String location;
+
         try {
-            location = locationViewModel.getCurrentLocation().getValue().getLocation();
+            locationViewModel.getCurrentLocation().observe(this, locationData ->
+                    location = locationData.getLocation());
         } catch (Exception e) {
             Timber.d(e, "Failed to load location");
-            location = "Warszawa";
         }
+        if (location == null) location = "Warszawa";
         weatherViewModel.getWeatherData(location).observe(this, data -> {
             if (data != null) {
                 Timber.d("WeatherData Changed:%s", data);

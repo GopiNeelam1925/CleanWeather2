@@ -12,14 +12,14 @@ import java.util.ArrayList;
 import java.util.List;
 
 import acodexm.cleanweather.R;
-import acodexm.cleanweather.data.model.WeatherData;
+import acodexm.cleanweather.data.model.LocationData;
 import acodexm.cleanweather.view.viewmodel.ModelViewControl;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
 
 public class SidebarAdapter extends RecyclerView.Adapter<SidebarAdapter.SidebarViewHolder> {
-    private List<String> mSidebarListItems = new ArrayList<>();
+    private List<LocationData> mSidebarListItems = new ArrayList<>();
     private SidebarUserClickAction mSidebarUserClickAction;
     private ModelViewControl viewControl;
 
@@ -28,9 +28,9 @@ public class SidebarAdapter extends RecyclerView.Adapter<SidebarAdapter.SidebarV
         this.viewControl = viewControl;
     }
 
-    public void addSidebarListItem(String location) {
+    public void addSidebarListItem(LocationData location) {
         int i = 0;
-        for (String city : mSidebarListItems) {
+        for (LocationData city : mSidebarListItems) {
             if (city.equals(location)) i++;
         }
         if (i == 0) {
@@ -39,18 +39,18 @@ public class SidebarAdapter extends RecyclerView.Adapter<SidebarAdapter.SidebarV
         notifyDataSetChanged();
     }
 
-    public void setSidebarListItems(List<WeatherData> mList) {
-        if (mList != null)
-            for (WeatherData weatherData : mList) {
-                this.mSidebarListItems.add(weatherData.getLocationName());
-            }
+    public void setSidebarListItems(List<LocationData> mList) {
+        if (mList != null) {
+            this.mSidebarListItems.clear();
+            this.mSidebarListItems.addAll(mList);
+        }
         notifyDataSetChanged();
     }
 
 
-    public void deleteItem(String location) {
+    public void deleteItem(LocationData location) {
         mSidebarListItems.remove(mSidebarListItems.indexOf(location));
-        viewControl.deleteWeather(location);
+        viewControl.deleteLocation(location);
     }
 
     @Override
@@ -62,8 +62,8 @@ public class SidebarAdapter extends RecyclerView.Adapter<SidebarAdapter.SidebarV
 
     @Override
     public void onBindViewHolder(SidebarViewHolder holder, int position) {
-        String location = mSidebarListItems.get(position);
-        holder.mTextView.setText(location);
+        LocationData location = mSidebarListItems.get(position);
+        holder.mTextView.setText(location.getLocation());
         holder.mLocation = location;
     }
 
@@ -73,7 +73,7 @@ public class SidebarAdapter extends RecyclerView.Adapter<SidebarAdapter.SidebarV
     }
 
     public interface SidebarUserClickAction {
-        void onSidebarListItemClick(String clientToReply);
+        void onSidebarListItemClick(LocationData locationData);
 
     }
 
@@ -82,7 +82,7 @@ public class SidebarAdapter extends RecyclerView.Adapter<SidebarAdapter.SidebarV
         TextView mTextView;
         @BindView(R.id.row_delete_btn)
         AppCompatImageView mDeleteBtn;
-        String mLocation;
+        LocationData mLocation;
 
         SidebarViewHolder(View itemView) {
             super(itemView);

@@ -29,7 +29,7 @@ public class WeatherDataViewModel extends BaseViewModel {
         mSubscription = new CompositeSubscription();
     }
 
-    public void getWeather(String location, int days, String lang) {
+    public void fetchWeather(String location, int days, String lang) {
         try {
             Subscription subscription = mService.getWeather(location, days, lang,
                     new WeatherServiceFactory.GetDataCallback() {

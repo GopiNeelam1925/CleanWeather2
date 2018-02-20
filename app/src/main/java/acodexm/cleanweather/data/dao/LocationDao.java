@@ -19,10 +19,10 @@ public interface LocationDao {
     @Query("SELECT * FROM " + LocationData.TABLE_NAME + " WHERE " + LocationData.LOCATION_FIELD + " = :location")
     LiveData<LocationData> getLocation(String location);
 
-    @Query("SELECT * FROM " + LocationData.TABLE_NAME + " ORDER BY " + LocationData.DATE_FIELD + " DESC LIMIT 1")
+    @Query("SELECT * FROM " + LocationData.TABLE_NAME + " ORDER BY datetime(" + LocationData.DATE_FIELD + ") DESC LIMIT 1")
     LiveData<LocationData> getCurrentLocation();
 
-    @Query("SELECT * FROM " + LocationData.TABLE_NAME + " ORDER BY " + LocationData.DATE_FIELD + " DESC")
+    @Query("SELECT * FROM " + LocationData.TABLE_NAME + " ORDER BY datetime(" + LocationData.DATE_FIELD + ") DESC")
     LiveData<List<LocationData>> getLocationList();
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)

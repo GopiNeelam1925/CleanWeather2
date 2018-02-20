@@ -21,7 +21,7 @@ public interface WeatherDao {
     @Query("SELECT * FROM " + WeatherData.TABLE_NAME + " WHERE " + WeatherData.LOCATION_FIELD + " = :location")
     LiveData<WeatherData> getWeatherData(String location);
 
-    @Query("SELECT * FROM " + WeatherData.TABLE_NAME + " ORDER BY " + WeatherData.DATE_FIELD + " DESC")
+    @Query("SELECT * FROM " + WeatherData.TABLE_NAME + " ORDER BY datetime(" + WeatherData.DATE_FIELD + ") DESC")
     LiveData<List<WeatherData>> getWeatherDataList();
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)

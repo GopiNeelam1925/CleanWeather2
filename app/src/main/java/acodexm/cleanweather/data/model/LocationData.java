@@ -27,6 +27,11 @@ public class LocationData {
     public LocationData() {
     }
 
+    public LocationData(LocationData locationData) {
+        this.location = locationData.location;
+        this.timestamp = LocalDateTime.now();
+    }
+
     @Ignore
     public LocationData(@NonNull String location, LocalDateTime timestamp) {
         this.location = location;

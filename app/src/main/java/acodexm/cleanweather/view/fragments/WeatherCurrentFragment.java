@@ -107,6 +107,7 @@ public class WeatherCurrentFragment extends Fragment implements Injectable {
     ViewModelFactory modelFactory;
     private static final String POSITION = "position";
     private int position;
+    private String location;
 
     public WeatherCurrentFragment() {
     }
@@ -138,13 +139,14 @@ public class WeatherCurrentFragment extends Fragment implements Injectable {
                 -> new Handler().postDelayed(this::updateWeather, 1000));
         boolean isCelsius = mPreferences.getBoolean(Constants.SETTING_TEMP_UNIT, false);
         Timber.d("onCreateView");
-        String location;
+
         try {
-            location = locationViewModel.getCurrentLocation().getValue().getLocation();
+            locationViewModel.getCurrentLocation().observe(this, locationData ->
+                    location = locationData.getLocation());
         } catch (Exception e) {
             Timber.d(e, "Failed to load location");
-            location = "Warszawa";
         }
+        if (location == null) location = "Warszawa";
         dataViewModel.getWeatherData(location).observe(this, data -> {
             if (data != null) {
                 Timber.d("onCreateView: mWeatherData %s", data.toString());

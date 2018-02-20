@@ -42,8 +42,9 @@ public class LocationDataViewModel extends BaseViewModel {
     }
 
     public LiveData<List<LocationData>> getLocationList() {
-        Timber.d(" location list from location_db ");
-        return locationRepository.getLocationList();
+        LiveData<List<LocationData>> listLiveData = locationRepository.getLocationList();
+        Timber.d(" location list from location_db %s", listLiveData.getValue());
+        return listLiveData;
     }
 
     public LiveData<LocationData> getCurrentLocation() {

@@ -28,7 +28,7 @@ public class LocationRepositoryImpl implements LocationRepository {
         }
         LocationData dbData = locationDao.getLocation(locationData.getLocation()).getValue();
         if (dbData != null && dbData.equals(locationData))
-            return Completable.fromAction(() -> locationDao.updateLocation(locationData));
+            return Completable.fromAction(() -> locationDao.updateLocation(new LocationData(locationData)));
         Timber.d("insert data to database %s", locationData.toString());
         return Completable.fromAction(() -> locationDao.addLocation(locationData));
     }
