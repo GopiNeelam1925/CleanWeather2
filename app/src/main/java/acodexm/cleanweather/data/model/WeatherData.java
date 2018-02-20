@@ -3,7 +3,9 @@ package acodexm.cleanweather.data.model;
 import android.arch.persistence.room.ColumnInfo;
 import android.arch.persistence.room.Embedded;
 import android.arch.persistence.room.Entity;
+import android.arch.persistence.room.Ignore;
 import android.arch.persistence.room.PrimaryKey;
+import android.support.annotation.NonNull;
 
 import org.threeten.bp.LocalDateTime;
 
@@ -17,31 +19,26 @@ public class WeatherData {
 
     public static final String TABLE_NAME = "weather_data";
     public static final String LOCATION_FIELD = "location";
+    public static final String DATE_FIELD = "insert_date";
 
-    @PrimaryKey(autoGenerate = true)
-    private int weatherID;
 
+    @PrimaryKey
+    @ColumnInfo(name = LOCATION_FIELD)
+    @NonNull
+    private String locationName = "";
     @Embedded
     private WeatherDataForecast weatherDataForecast;
+    @ColumnInfo(name = DATE_FIELD)
     private LocalDateTime date;
-    @ColumnInfo(name = LOCATION_FIELD)
-    private String locationName;
 
     public WeatherData() {
     }
 
+    @Ignore
     public WeatherData(WeatherDataForecast weatherDataForecast, LocalDateTime date) {
         this.weatherDataForecast = weatherDataForecast;
         this.date = date;
-        this.locationName = weatherDataForecast.getLocation().getName();
-    }
-
-    public int getWeatherID() {
-        return weatherID;
-    }
-
-    public void setWeatherID(int weatherID) {
-        this.weatherID = weatherID;
+        this.locationName = weatherDataForecast.getLocation().getName().toLowerCase().trim();
     }
 
 
@@ -61,21 +58,26 @@ public class WeatherData {
         this.date = date;
     }
 
+    @NonNull
     public String getLocationName() {
         return locationName;
     }
 
-    public void setLocationName(String locationName) {
-        this.locationName = locationName;
+    public void setLocationName(@NonNull String locationName) {
+        this.locationName = locationName.toLowerCase().trim();
     }
 
     @Override
     public String toString() {
         return "WeatherData{" +
-                "weatherID=" + weatherID +
                 ", weatherDataForecast=" + weatherDataForecast +
                 ", date=" + date +
                 ", locationName='" + locationName + '\'' +
                 '}';
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        return obj instanceof WeatherData && ((WeatherData) obj).getLocationName().equals(this.getLocationName());
     }
 }

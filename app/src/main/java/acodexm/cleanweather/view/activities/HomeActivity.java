@@ -1,15 +1,11 @@
 package acodexm.cleanweather.view.activities;
 
 
-import android.Manifest;
-import android.app.Activity;
-import android.app.AlertDialog;
 import android.app.SearchManager;
 import android.arch.lifecycle.ViewModelProviders;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.content.pm.PackageManager;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
@@ -18,14 +14,11 @@ import android.net.NetworkInfo;
 import android.os.Bundle;
 import android.os.Vibrator;
 import android.preference.PreferenceManager;
-import android.provider.Settings;
 import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.NavigationView;
 import android.support.design.widget.TabLayout;
-import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
-import android.support.v4.content.ContextCompat;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.view.MenuItemCompat;
 import android.support.v4.widget.DrawerLayout;
@@ -42,14 +35,18 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import org.threeten.bp.LocalDateTime;
+
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Timer;
 import java.util.TimerTask;
 
 import javax.inject.Inject;
 
 import acodexm.cleanweather.R;
+import acodexm.cleanweather.data.model.LocationData;
 import acodexm.cleanweather.gps.MyLocationListener;
 import acodexm.cleanweather.injection.ViewModelFactory;
 import acodexm.cleanweather.util.Constants;
@@ -59,6 +56,8 @@ import acodexm.cleanweather.view.fragments.DaysPagerAdapter;
 import acodexm.cleanweather.view.fragments.SidebarAdapter;
 import acodexm.cleanweather.view.fragments.WeatherCurrentFragment;
 import acodexm.cleanweather.view.fragments.WeatherForecastFragment;
+import acodexm.cleanweather.view.viewmodel.LocationDataViewModel;
+import acodexm.cleanweather.view.viewmodel.ModelViewControl;
 import acodexm.cleanweather.view.viewmodel.WeatherDataViewModel;
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -69,8 +68,7 @@ import dagger.android.support.HasSupportFragmentInjector;
 import timber.log.Timber;
 
 public class HomeActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener,
-        SidebarAdapter.SidebarUserClickAction, HasSupportFragmentInjector {
-    private static final int REQUEST_RUNTIME_PERMISSION = 123;
+        SidebarAdapter.SidebarUserClickAction, HasSupportFragmentInjector, ModelViewControl {
     @BindView(R.id.toolbar)
     protected Toolbar mToolbar;
     @BindView(R.id.tabs)
@@ -90,18 +88,23 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
     @BindView(R.id.add_city)
     protected TextView mAddCity;
     private SearchView searchView;
-    private String geoLocation;
+    private static String location;
+    private String language;
     private boolean isBackButtonPressed;
     private SharedPreferences mSharedPreferences;
     private SidebarAdapter mSidebarAdapter;
     private DaysPagerAdapter mDaysPagerAdapter;
-    private WeatherDataViewModel dataViewModel;
-
+    private WeatherDataViewModel weatherViewModel;
+    private LocationDataViewModel locationViewModel;
     @Inject
     ViewModelFactory modelFactory;
 
     @Inject
     DispatchingAndroidInjector<Fragment> supportFragmentInjector;
+
+    public static String getLocation() {
+        return location;
+    }
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -111,18 +114,34 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
         ButterKnife.bind(this);
         setSupportActionBar(mToolbar);
         getSupportActionBar().hide();
-        dataViewModel = ViewModelProviders.of(this, modelFactory).get(WeatherDataViewModel.class);
+        weatherViewModel = ViewModelProviders.of(this, modelFactory).get(WeatherDataViewModel.class);
+        locationViewModel = ViewModelProviders.of(this, modelFactory).get(LocationDataViewModel.class);
         mSharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
         PreferenceManager.setDefaultValues(this, R.xml.preferences, false);
-        if (checkGPSPermission()) {
-            geoLocation = getLocation();
+        try {
+            location = locationViewModel.getCurrentLocation().getValue().getLocation();
+        } catch (Exception e) {
+            Timber.d(e, "getLocation null exception loading temp default Warszawa");
+            locationViewModel.addLocation(new LocationData("Warszawa", LocalDateTime.now()));
+            try {
+                location = locationViewModel.getCurrentLocation().getValue().getLocation();
+            } catch (Exception e1) {
+                Timber.d(e, "Failed to load temp Warszawa");
+            }
         }
+        if (checkGPSPermission() && location == null) {
+            location = getGPSLocation();
+        }
+        language = Locale.getDefault().getLanguage();
+        Timber.d("onCreate");
+        weatherViewModel.getWeather(location, 7, language);
         mViewPager.setHomeActivity(this);
         mSidebarAdapter = new SidebarAdapter();
-        mSidebarAdapter.setSidebarClickListener(this);
+        mSidebarAdapter.setSidebarClickListener(this, this);
         mSidebarList.setLayoutManager(new LinearLayoutManager(this));
         mSidebarList.setAdapter(mSidebarAdapter);
 
+        setWeatherView();
     }
 
     @Override
@@ -146,6 +165,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
     public int setAmountOfDays() {
         return Integer.valueOf(mSharedPreferences.getString(Constants.SETTING_DAY_LIST, 7 + ""));
     }
+
 
 //    public String setUnits() {
 //
@@ -186,8 +206,8 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
 
     private List<Fragment> createFragments() {
         List<Fragment> fragments = new ArrayList<>();
-        fragments.add(new WeatherCurrentFragment(0));
-        fragments.add(new WeatherCurrentFragment(1));
+        fragments.add(WeatherCurrentFragment.newInstance(0));
+        fragments.add(WeatherCurrentFragment.newInstance(1));
         fragments.add(new WeatherForecastFragment());
         Timber.d("createFragments new List<Fragment>.size() is %s", fragments.size());
         return fragments;
@@ -217,7 +237,9 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
             @Override
             public boolean onQueryTextSubmit(String query) {
                 mSidebarAdapter.addSidebarListItem(query);
-                dataViewModel.getWeather(query, setAmountOfDays(), "pl");
+                weatherViewModel.getWeather(query, setAmountOfDays(), language);
+                location = query;
+                locationViewModel.addLocation(new LocationData(query, LocalDateTime.now()));
                 searchView.clearFocus();
                 mActionButton.show();
                 getSupportActionBar().hide();
@@ -229,6 +251,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
                 return false;
             }
         });
+
         mActionButton.setOnClickListener(v -> {
             Vibrator vibe = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
             vibe.vibrate(50);
@@ -302,7 +325,10 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
     @Override
     protected void onResume() {
         super.onResume();
-        setWeatherView();
+        Timber.d("onResume");
+        weatherViewModel.getWeatherData(location);
+        mSidebarAdapter.setSidebarListItems(weatherViewModel.getWeatherDataList().getValue());
+        mSidebarAdapter.setSidebarListItems(weatherViewModel.getWeatherDataList().getValue());
 //        if (mWeatherData != null) {
 //            setWeatherView(mWeatherData);
 //            Timber.d(TAG, "onResume Activity" + " " + "creating view from saved instance?");
@@ -310,9 +336,9 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
 //            setWeatherView(mDataDao.getWeatherDataByCity(mSearchLocation).get(0));
 //            Timber.d(TAG, "onResume Activity" + " " + "creating view from database");
 //            Toast.makeText(this, R.string.offline_message, Toast.LENGTH_SHORT).show();
-//        } else if (!mViewLoaded && geoLocation.size() == 2 && isGeoPossibleFlag) {
+//        } else if (!mViewLoaded && location.size() == 2 && isGeoPossibleFlag) {
 //            isGeoPossibleFlag = false;
-//            presenter.getWeather("", geoLocation, setAmountOfDays(), setUnits());
+//            presenter.getWeather("", location, setAmountOfDays(), setUnits());
 //            Timber.d(TAG, "onResume Activity" + " " + "creating view and getting new WeatherDataCurrent with GPS");
 //        } else if (!mViewLoaded) {
 //            Timber.d(TAG, "onResume Activity" + " " + "creating view and getting new WeatherDataCurrent");
@@ -322,7 +348,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
     }
 
 
-    public String getLocation() {
+    public String getGPSLocation() {
         StringBuilder geoLocation = new StringBuilder();
         try {
             if (checkGPSPermission()) {
@@ -339,6 +365,8 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
                 if (geoLocation.length() > 0)
                     locationManager.removeUpdates(locationListener);
                 return geoLocation.toString();
+            } else {
+                Toast.makeText(this, "GPS disabled", Toast.LENGTH_SHORT).show();
             }
         } catch (SecurityException e) {
             Timber.e("getLocationCurrent Error: %s", e.getMessage());
@@ -346,46 +374,11 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
         return geoLocation.toString();
     }
 
-    private void showDialogGPS() {
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setCancelable(false);
-        builder.setTitle("Enable GPS");
-        builder.setMessage("Please enable GPS");
-        builder.setPositiveButton("Enable", (dialog, which) -> startActivity(
-                new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS)));
-        builder.setNegativeButton("Ignore", (dialog, which) -> dialog.dismiss());
-        AlertDialog alert = builder.create();
-        alert.show();
+    private boolean checkGPSPermission() {
+        LocationManager locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+        return locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER);
     }
 
-    public boolean gpsStatus() {
-        LocationManager mLocManager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
-        return mLocManager.isProviderEnabled(LocationManager.GPS_PROVIDER);
-    }
-
-    public boolean checkGPSPermission() {
-        if (CheckPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)) {
-            if (!gpsStatus()) {
-                showDialogGPS();
-                Timber.d("checkGPSPermission o to GPS settings");
-            } else {
-                Timber.d("GPS permission Status OK");
-                return true;
-            }
-        } else {
-            RequestPermission(this, Manifest.permission.ACCESS_FINE_LOCATION, REQUEST_RUNTIME_PERMISSION);
-            Timber.e("RequestPermission case no gps permission");
-        }
-        return false;
-    }
-
-    public void RequestPermission(Activity thisActivity, String Permission, int Code) {
-        ActivityCompat.requestPermissions(thisActivity, new String[]{Permission}, Code);
-    }
-
-    public boolean CheckPermission(Activity context, String Permission) {
-        return ContextCompat.checkSelfPermission(context, Permission) == PackageManager.PERMISSION_GRANTED;
-    }
 
     public boolean isOnline() {
         ConnectivityManager cm =
@@ -398,7 +391,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
     public void onSidebarListItemClick(String location) {
 
         if (isOnline())
-            dataViewModel.getWeather(location, setAmountOfDays(), "pl");
+            weatherViewModel.getWeather(location, setAmountOfDays(), language);
         else {
             setWeatherView();
             Toast.makeText(this, R.string.offline_message, Toast.LENGTH_SHORT).show();
@@ -423,7 +416,11 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
         if (drawer.isDrawerOpen(GravityCompat.START)) {
             drawer.closeDrawer(GravityCompat.START);
         }
-        dataViewModel.getWeather(geoLocation, setAmountOfDays(), "pl");
+        weatherViewModel.getWeather(getGPSLocation(), setAmountOfDays(), language);
     }
 
+    @Override
+    public void deleteWeather(String location) {
+        weatherViewModel.deleteWeatherData(weatherViewModel.getWeatherData(location).getValue());
+    }
 }

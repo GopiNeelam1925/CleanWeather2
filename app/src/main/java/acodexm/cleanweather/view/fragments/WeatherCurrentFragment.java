@@ -37,6 +37,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
+import java.util.Locale;
 
 import javax.inject.Inject;
 
@@ -50,6 +51,7 @@ import acodexm.cleanweather.util.DataValueFormatter;
 import acodexm.cleanweather.util.WeatherUtils;
 import acodexm.cleanweather.util.XAxisAsDaysFormatter;
 import acodexm.cleanweather.view.activities.HomeActivity;
+import acodexm.cleanweather.view.viewmodel.LocationDataViewModel;
 import acodexm.cleanweather.view.viewmodel.WeatherDataViewModel;
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -57,7 +59,6 @@ import butterknife.OnClick;
 import timber.log.Timber;
 
 public class WeatherCurrentFragment extends Fragment implements Injectable {
-    private static final String TAG = WeatherCurrentFragment.class.getSimpleName();
     @BindView(R.id.text_city)
     protected TextView mLocation;
     @BindView(R.id.text_desc)
@@ -95,19 +96,28 @@ public class WeatherCurrentFragment extends Fragment implements Injectable {
     @BindView(R.id.detail_text_sundown)
     protected TextView mSundown;
 
-    private SimpleDateFormat mSimpleDateFormat = new SimpleDateFormat("MMM dd");
-    private SimpleDateFormat mSimpleTimeFormat = new SimpleDateFormat("HH:mm");
+    private SimpleDateFormat mSimpleDateFormat = new SimpleDateFormat("MMM dd", Locale.getDefault());
+    private SimpleDateFormat mSimpleTimeFormat = new SimpleDateFormat("HH:mm", Locale.getDefault());
     private SharedPreferences mPreferences;
     private int days;
     private boolean isCelsius;
     private WeatherDataViewModel dataViewModel;
+    private LocationDataViewModel locationViewModel;
     @Inject
     ViewModelFactory modelFactory;
-
+    private static final String POSITION = "position";
+    private int position;
 
     public WeatherCurrentFragment() {
     }
 
+    public static Fragment newInstance(int position) {
+        Fragment fragment = new WeatherCurrentFragment();
+        Bundle args = new Bundle();
+        args.putInt(POSITION, position);
+        fragment.setArguments(args);
+        return fragment;
+    }
 
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container,
@@ -116,7 +126,10 @@ public class WeatherCurrentFragment extends Fragment implements Injectable {
         View rootView = inflater.inflate(R.layout.fragment_weather, container, false);
         ButterKnife.bind(this, rootView);
         dataViewModel = ViewModelProviders.of(this, modelFactory).get(WeatherDataViewModel.class);
+        locationViewModel = ViewModelProviders.of(this, modelFactory).get(LocationDataViewModel.class);
 
+        if (getArguments() != null)
+            position = getArguments().getInt(POSITION);
         mPreferences = PreferenceManager.getDefaultSharedPreferences(getContext());
         days = Integer.valueOf(mPreferences.getString(Constants.SETTING_DAY_LIST, 7 + ""));
         isCelsius = mPreferences.getBoolean(Constants.SETTING_TEMP_UNIT, false);
@@ -124,11 +137,19 @@ public class WeatherCurrentFragment extends Fragment implements Injectable {
         mSwipeRefreshLayout.setOnRefreshListener(()
                 -> new Handler().postDelayed(this::updateWeather, 1000));
         boolean isCelsius = mPreferences.getBoolean(Constants.SETTING_TEMP_UNIT, false);
-        dataViewModel.getWeatherData("Warszawa").observe(this, data -> {
+        Timber.d("onCreateView");
+        String location;
+        try {
+            location = locationViewModel.getCurrentLocation().getValue().getLocation();
+        } catch (Exception e) {
+            Timber.d(e, "Failed to load location");
+            location = "Warszawa";
+        }
+        dataViewModel.getWeatherData(location).observe(this, data -> {
             if (data != null) {
                 Timber.d("onCreateView: mWeatherData %s", data.toString());
                 setChartSettings(data);
-                setupWeather(data, isCelsius, 0);
+                setupWeather(data, isCelsius, position);
             }
         });
         return rootView;

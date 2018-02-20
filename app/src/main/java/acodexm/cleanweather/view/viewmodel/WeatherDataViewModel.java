@@ -3,6 +3,8 @@ package acodexm.cleanweather.view.viewmodel;
 
 import android.arch.lifecycle.LiveData;
 
+import java.util.List;
+
 import javax.inject.Inject;
 
 import acodexm.cleanweather.data.model.WeatherData;
@@ -18,9 +20,9 @@ import timber.log.Timber;
 
 public class WeatherDataViewModel extends BaseViewModel {
 
-    @Inject
-    WeatherServiceFactory mService;
+
     private CompositeSubscription mSubscription;
+
 
     @Inject
     public WeatherDataViewModel() {
@@ -48,11 +50,15 @@ public class WeatherDataViewModel extends BaseViewModel {
         }
     }
 
+    public LiveData<List<WeatherData>> getWeatherDataList() {
+        return weatherRepository.getWeatherDataList();
+    }
+
     public void onStop() {
         try {
             mSubscription.unsubscribe();
         } catch (Exception e) {
-            Timber.e("onDestroy  %s", e.getMessage());
+            Timber.e("onStop  %s", e.getMessage());
         }
     }
 
@@ -68,6 +74,7 @@ public class WeatherDataViewModel extends BaseViewModel {
                     @Override
                     public void onComplete() {
                         Timber.d("onComplete - successfully added weather to darabase");
+
                     }
 
                     @Override
@@ -79,14 +86,13 @@ public class WeatherDataViewModel extends BaseViewModel {
 
 
     public LiveData<WeatherData> getWeatherData(String location) {
-        LiveData<WeatherData> data = weatherRepository.getWeatherData(location);
+        LiveData<WeatherData> data = weatherRepository.getWeatherData(location.toLowerCase().trim());
         WeatherData weatherData = data.getValue();
         if (weatherData == null) weatherData = new WeatherData();
-        Timber.d("data from db %s", weatherData.toString());
+        Timber.d("data from weather_db %s", weatherData.toString());
         return data;
     }
 
-    //TODO delete from sidebar adapter
     public void deleteWeatherData(WeatherData weatherData) {
         weatherRepository.deleteWeatherData(weatherData)
                 .subscribeOn(Schedulers.io())

@@ -2,6 +2,8 @@ package acodexm.cleanweather.repository;
 
 import android.arch.lifecycle.LiveData;
 
+import java.util.List;
+
 import javax.inject.Inject;
 
 import acodexm.cleanweather.data.dao.WeatherDao;
@@ -26,6 +28,9 @@ public class WeatherRepositoryImpl implements WeatherRepository {
         if (weatherData == null) {
             return Completable.error(new IllegalArgumentException("WeatherData cannot be null"));
         }
+        WeatherData dbData = weatherDao.getWeatherData(weatherData.getLocationName()).getValue();
+        if (dbData != null && dbData.equals(weatherData))
+            return Completable.fromAction(() -> weatherDao.updateWeatherData(weatherData));
         Timber.d("insert data to database %s", weatherData.toString());
         return Completable.fromAction(() -> weatherDao.addWeatherData(weatherData));
     }
@@ -33,6 +38,11 @@ public class WeatherRepositoryImpl implements WeatherRepository {
     @Override
     public LiveData<WeatherData> getWeatherData(String location) {
         return weatherDao.getWeatherData(location);
+    }
+
+    @Override
+    public LiveData<List<WeatherData>> getWeatherDataList() {
+        return weatherDao.getWeatherDataList();
     }
 
     @Override

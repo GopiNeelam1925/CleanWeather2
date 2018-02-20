@@ -2,7 +2,6 @@ package acodexm.cleanweather.netwoking;
 
 
 import acodexm.cleanweather.data.model.forecast.WeatherDataForecast;
-import acodexm.cleanweather.data.model.search.SearchData;
 import retrofit2.http.GET;
 import retrofit2.http.Query;
 import rx.Observable;
@@ -15,10 +14,5 @@ public interface WeatherService {
                                                            @Query("q") String location,
                                                            @Query("days") int days,
                                                            @Query("lang") String lang);
-
-    //http://api.apixu.com/v1/search.json?key=<YOUR_API_KEY>&q=lond
-    @GET("search.json?")
-    Observable<SearchData> getSearchData(@Query("key") String key,
-                                         @Query("q") String location);
 
 }

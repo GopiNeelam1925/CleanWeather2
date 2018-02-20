@@ -1,6 +1,5 @@
 package acodexm.cleanweather.data.db;
 
-
 import android.arch.persistence.room.Database;
 import android.arch.persistence.room.RoomDatabase;
 import android.arch.persistence.room.TypeConverters;

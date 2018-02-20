@@ -17,6 +17,7 @@ import javax.inject.Inject;
 import acodexm.cleanweather.R;
 import acodexm.cleanweather.injection.Injectable;
 import acodexm.cleanweather.injection.ViewModelFactory;
+import acodexm.cleanweather.view.viewmodel.LocationDataViewModel;
 import acodexm.cleanweather.view.viewmodel.WeatherDataViewModel;
 import timber.log.Timber;
 
@@ -24,29 +25,28 @@ public class WeatherForecastFragment extends Fragment implements Injectable {
     @Inject
     ViewModelFactory viewModelFactory;
     private WeatherDataAdapter adapter;
-    private WeatherDataViewModel weatherDataViewModel;
-
-//    private View.OnClickListener itemClickListener = v -> {
-//        WeatherData data = (WeatherData) v.getTag();
-//
-//        Toast.makeText(getContext(), "Clicked:" + data.getName(), Toast.LENGTH_LONG).show();
-//    };
+    private WeatherDataViewModel weatherViewModel;
+    private LocationDataViewModel locationViewModel;
 
     public WeatherForecastFragment() {
     }
-
-//    public static Fragment newInstance(WeatherData weatherData) {
-//        Timber.d("newInstance: " + weatherData.toString());
-//        return new WeatherForecastFragment();
-//    }
 
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_list_forecast, container, false);
         setupRecyclerView(view);
-        weatherDataViewModel = ViewModelProviders.of(this, viewModelFactory).get(WeatherDataViewModel.class);
-        weatherDataViewModel.getWeatherData("Warszawa").observe(this, data -> {
+        weatherViewModel = ViewModelProviders.of(this, viewModelFactory).get(WeatherDataViewModel.class);
+        locationViewModel = ViewModelProviders.of(this, viewModelFactory).get(LocationDataViewModel.class);
+        Timber.d("onCreateView");
+        String location;
+        try {
+            location = locationViewModel.getCurrentLocation().getValue().getLocation();
+        } catch (Exception e) {
+            Timber.d(e, "Failed to load location");
+            location = "Warszawa";
+        }
+        weatherViewModel.getWeatherData(location).observe(this, data -> {
             if (data != null) {
                 Timber.d("WeatherData Changed:%s", data);
                 adapter.setItems(data);

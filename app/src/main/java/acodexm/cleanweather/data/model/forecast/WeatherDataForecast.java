@@ -3,7 +3,6 @@ package acodexm.cleanweather.data.model.forecast;
 
 import android.arch.persistence.room.Embedded;
 import android.arch.persistence.room.Entity;
-import android.arch.persistence.room.PrimaryKey;
 
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
@@ -14,8 +13,7 @@ import static acodexm.cleanweather.data.model.forecast.WeatherDataForecast.WEATH
 public class WeatherDataForecast {
 
     public static final String WEATHER_FORECAST = "weather_forecast";
-    @PrimaryKey(autoGenerate = true)
-    private int weatherForecastID;
+
     @SerializedName("location")
     @Expose
     @Embedded
@@ -29,13 +27,7 @@ public class WeatherDataForecast {
     @Embedded
     private Forecast forecast;
 
-    public int getWeatherForecastID() {
-        return weatherForecastID;
-    }
 
-    public void setWeatherForecastID(int weatherForecastID) {
-        this.weatherForecastID = weatherForecastID;
-    }
 
     public Location getLocation() {
         return location;
@@ -64,7 +56,6 @@ public class WeatherDataForecast {
     @Override
     public String toString() {
         return "WeatherDataForecast{" +
-                "weatherForecastID=" + weatherForecastID +
                 ", location=" + location +
                 ", current=" + current +
                 ", forecast=" + forecast +

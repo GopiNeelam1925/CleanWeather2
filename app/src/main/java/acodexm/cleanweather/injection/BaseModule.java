@@ -5,10 +5,14 @@ import android.arch.persistence.room.Room;
 import javax.inject.Singleton;
 
 import acodexm.cleanweather.BaseApp;
+import acodexm.cleanweather.data.dao.LocationDao;
 import acodexm.cleanweather.data.dao.WeatherDao;
+import acodexm.cleanweather.data.db.LocationDatabase;
 import acodexm.cleanweather.data.db.WeatherDatabase;
 import acodexm.cleanweather.netwoking.WeatherService;
 import acodexm.cleanweather.netwoking.WeatherServiceFactory;
+import acodexm.cleanweather.repository.LocationRepository;
+import acodexm.cleanweather.repository.LocationRepositoryImpl;
 import acodexm.cleanweather.repository.WeatherRepository;
 import acodexm.cleanweather.repository.WeatherRepositoryImpl;
 import dagger.Module;
@@ -22,7 +26,8 @@ import timber.log.Timber;
 
 @Module(includes = {AndroidInjectionModule.class, ViewModelModule.class})
 public class BaseModule {
-    public static final String DB_NAME = "weather_db";
+    public static final String WEATHER_DB = "weather_db";
+    public static final String LOCATION_DB = "location_db";
 
     @Provides
     WeatherRepository providesWeatherRepository(WeatherDao weatherDao) {
@@ -41,7 +46,27 @@ public class BaseModule {
     @Singleton
     WeatherDatabase providesWeatherDatabase(BaseApp context) {
         Timber.d("BaseModule providesWeatherDataDatabase");
-        return Room.databaseBuilder(context.getApplicationContext(), WeatherDatabase.class, DB_NAME).build();
+        return Room.databaseBuilder(context.getApplicationContext(), WeatherDatabase.class, WEATHER_DB).build();
+    }
+
+    @Provides
+    LocationRepository providesLocationRepository(LocationDao locationDao) {
+        Timber.d("BaseModule providesLocationDataRepository:%s", locationDao);
+        return new LocationRepositoryImpl(locationDao);
+    }
+
+    @Provides
+    @Singleton
+    LocationDao providesLocationDao(LocationDatabase locationDatabase) {
+        Timber.d("BaseModule providesLocationDataDao:%s", locationDatabase);
+        return locationDatabase.locationDao();
+    }
+
+    @Provides
+    @Singleton
+    LocationDatabase providesLocationDatabase(BaseApp context) {
+        Timber.d("BaseModule providesLocationDataDatabase");
+        return Room.databaseBuilder(context.getApplicationContext(), LocationDatabase.class, LOCATION_DB).build();
     }
 
     @Provides

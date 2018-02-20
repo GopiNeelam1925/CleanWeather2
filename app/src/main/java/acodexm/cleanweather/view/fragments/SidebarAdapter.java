@@ -12,6 +12,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import acodexm.cleanweather.R;
+import acodexm.cleanweather.data.model.WeatherData;
+import acodexm.cleanweather.view.viewmodel.ModelViewControl;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
@@ -19,9 +21,11 @@ import butterknife.OnClick;
 public class SidebarAdapter extends RecyclerView.Adapter<SidebarAdapter.SidebarViewHolder> {
     private List<String> mSidebarListItems = new ArrayList<>();
     private SidebarUserClickAction mSidebarUserClickAction;
+    private ModelViewControl viewControl;
 
-    public void setSidebarClickListener(SidebarUserClickAction sidebarUserClickAction) {
+    public void setSidebarClickListener(SidebarUserClickAction sidebarUserClickAction, ModelViewControl viewControl) {
         this.mSidebarUserClickAction = sidebarUserClickAction;
+        this.viewControl = viewControl;
     }
 
     public void addSidebarListItem(String location) {
@@ -35,22 +39,18 @@ public class SidebarAdapter extends RecyclerView.Adapter<SidebarAdapter.SidebarV
         notifyDataSetChanged();
     }
 
-    public List<String> getSidebarListItems() {
-        return mSidebarListItems;
-    }
-
-    public void setSidebarListItems(List<String> mList) {
-        this.mSidebarListItems = mList;
+    public void setSidebarListItems(List<WeatherData> mList) {
+        if (mList != null)
+            for (WeatherData weatherData : mList) {
+                this.mSidebarListItems.add(weatherData.getLocationName());
+            }
         notifyDataSetChanged();
     }
 
-    public void clearSidebarListItems() {
-        mSidebarListItems.clear();
-        notifyDataSetChanged();
-    }
 
     public void deleteItem(String location) {
         mSidebarListItems.remove(mSidebarListItems.indexOf(location));
+        viewControl.deleteWeather(location);
     }
 
     @Override
