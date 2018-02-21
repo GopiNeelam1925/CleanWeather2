@@ -2,9 +2,9 @@ package acodexm.cleanweather.netwoking;
 
 
 import acodexm.cleanweather.data.model.forecast.WeatherDataForecast;
+import io.reactivex.Observable;
 import retrofit2.http.GET;
 import retrofit2.http.Query;
-import rx.Observable;
 
 public interface WeatherService {
 

@@ -2,64 +2,33 @@ package acodexm.cleanweather.view.viewmodel;
 
 
 import android.arch.lifecycle.LiveData;
+import android.arch.lifecycle.MutableLiveData;
 
 import java.util.List;
 
 import javax.inject.Inject;
 
 import acodexm.cleanweather.data.model.WeatherData;
-import acodexm.cleanweather.netwoking.NetworkError;
-import acodexm.cleanweather.netwoking.WeatherServiceFactory;
 import io.reactivex.CompletableObserver;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.schedulers.Schedulers;
-import rx.Subscription;
-import rx.subscriptions.CompositeSubscription;
 import timber.log.Timber;
 
 public class WeatherDataViewModel extends BaseViewModel {
 
-
-    private CompositeSubscription mSubscription;
-
-
     @Inject
     public WeatherDataViewModel() {
-        mSubscription = new CompositeSubscription();
     }
 
-    public void fetchWeather(String location, int days, String lang) {
-        try {
-            Subscription subscription = mService.getWeather(location, days, lang,
-                    new WeatherServiceFactory.GetDataCallback() {
-                        @Override
-                        public void onSuccess(WeatherData weatherData) {
-                            Timber.d("onSuccess: %s", weatherData.toString());
-                            addWeatherData(weatherData);
-                        }
-
-                        @Override
-                        public void onError(NetworkError networkError) {
-                            Timber.d("onError: %s", networkError.getMessage());
-                        }
-                    });
-            mSubscription.add(subscription);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+    public MutableLiveData<Response> fetchWeather(String location, int days, String lang) {
+        mService.getWeather(location, days, lang);
+        return mService.response();
     }
+
 
     public LiveData<List<WeatherData>> getWeatherDataList() {
         return weatherRepository.getWeatherDataList();
-    }
-
-    public void onStop() {
-        try {
-            mSubscription.unsubscribe();
-        } catch (Exception e) {
-            Timber.e("onStop  %s", e.getMessage());
-        }
     }
 
     public void addWeatherData(WeatherData weatherData) {
@@ -86,11 +55,8 @@ public class WeatherDataViewModel extends BaseViewModel {
 
 
     public LiveData<WeatherData> getWeatherData(String location) {
-        LiveData<WeatherData> data = weatherRepository.getWeatherData(location.toLowerCase().trim());
-        WeatherData weatherData = data.getValue();
-        if (weatherData == null) weatherData = new WeatherData();
-        Timber.d("data from weather_db %s", weatherData.toString());
-        return data;
+        Timber.d("getWeatherData for %s", location);
+        return weatherRepository.getWeatherData(location.toLowerCase().trim());
     }
 
     public void deleteWeatherData(WeatherData weatherData) {

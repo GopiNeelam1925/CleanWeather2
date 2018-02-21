@@ -27,7 +27,7 @@ public class WeatherForecastFragment extends Fragment implements Injectable {
     private WeatherDataAdapter adapter;
     private WeatherDataViewModel weatherViewModel;
     private LocationDataViewModel locationViewModel;
-    private String location;
+
     public WeatherForecastFragment() {
     }
 
@@ -39,21 +39,28 @@ public class WeatherForecastFragment extends Fragment implements Injectable {
         weatherViewModel = ViewModelProviders.of(this, viewModelFactory).get(WeatherDataViewModel.class);
         locationViewModel = ViewModelProviders.of(this, viewModelFactory).get(LocationDataViewModel.class);
         Timber.d("onCreateView");
+        setData();
+        return view;
+    }
 
+    private void setData() {
         try {
-            locationViewModel.getCurrentLocation().observe(this, locationData ->
-                    location = locationData.getLocation());
+            locationViewModel.getCurrentLocation().observe(this,
+                    locationData -> {
+                        if (locationData != null) {
+                            weatherViewModel.getWeatherData(locationData.getLocation()).observe(this,
+                                    data -> {
+                                        if (data != null) {
+                                            Timber.d("WeatherData Changed:%s", data);
+                                            adapter.setItems(data);
+                                        }
+                                    });
+                        }
+                    });
         } catch (Exception e) {
             Timber.d(e, "Failed to load location");
         }
-        if (location == null) location = "Warszawa";
-        weatherViewModel.getWeatherData(location).observe(this, data -> {
-            if (data != null) {
-                Timber.d("WeatherData Changed:%s", data);
-                adapter.setItems(data);
-            }
-        });
-        return view;
+
     }
 
 
@@ -61,7 +68,6 @@ public class WeatherForecastFragment extends Fragment implements Injectable {
         RecyclerView recyclerView = view.findViewById(R.id.recycler_view_list_forecast);
         LinearLayoutManager layoutManager = new LinearLayoutManager(getContext(), LinearLayoutManager.VERTICAL, false);
         recyclerView.setLayoutManager(layoutManager);
-
         adapter = new WeatherDataAdapter(getContext());
         recyclerView.setAdapter(adapter);
         final DividerItemDecoration dividerItemDecoration = new DividerItemDecoration(recyclerView.getContext(),

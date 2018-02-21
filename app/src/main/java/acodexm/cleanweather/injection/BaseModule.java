@@ -2,6 +2,8 @@ package acodexm.cleanweather.injection;
 
 import android.arch.persistence.room.Room;
 
+import com.jakewharton.retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory;
+
 import javax.inject.Singleton;
 
 import acodexm.cleanweather.BaseApp;
@@ -19,7 +21,6 @@ import dagger.Module;
 import dagger.Provides;
 import dagger.android.AndroidInjectionModule;
 import retrofit2.Retrofit;
-import retrofit2.adapter.rxjava.RxJavaCallAdapterFactory;
 import retrofit2.converter.gson.GsonConverterFactory;
 import timber.log.Timber;
 
@@ -74,7 +75,8 @@ public class BaseModule {
     WeatherService providesNetworkService() {
         Retrofit retrofit = new Retrofit.Builder()
                 .addConverterFactory(GsonConverterFactory.create())
-                .addCallAdapterFactory(RxJavaCallAdapterFactory.create())
+//                .addCallAdapterFactory(RxJavaCallAdapterFactory.create())
+                .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
                 .baseUrl("http://api.apixu.com/v1/")
                 .build();
 
@@ -86,4 +88,5 @@ public class BaseModule {
     WeatherServiceFactory providesService(WeatherService weatherService) {
         return new WeatherServiceFactory(weatherService);
     }
+
 }

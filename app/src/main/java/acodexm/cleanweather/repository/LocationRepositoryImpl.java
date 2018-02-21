@@ -27,9 +27,11 @@ public class LocationRepositoryImpl implements LocationRepository {
             return Completable.error(new IllegalArgumentException("LocationData cannot be null"));
         }
         LocationData dbData = locationDao.getLocation(locationData.getLocation()).getValue();
-        if (dbData != null && dbData.equals(locationData))
+        if (dbData != null && dbData.equals(locationData)) {
+            Timber.d("update location data to database %s", locationData.toString());
             return Completable.fromAction(() -> locationDao.updateLocation(new LocationData(locationData)));
-        Timber.d("insert data to database %s", locationData.toString());
+        }
+        Timber.d("insert new location data to database %s", locationData.toString());
         return Completable.fromAction(() -> locationDao.addLocation(locationData));
     }
 

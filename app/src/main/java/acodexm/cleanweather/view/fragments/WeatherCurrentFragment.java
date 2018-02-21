@@ -137,24 +137,30 @@ public class WeatherCurrentFragment extends Fragment implements Injectable {
         mSwipeRefreshLayout.setColorSchemeResources(R.color.orange, R.color.blue, R.color.green);
         mSwipeRefreshLayout.setOnRefreshListener(()
                 -> new Handler().postDelayed(this::updateWeather, 1000));
-        boolean isCelsius = mPreferences.getBoolean(Constants.SETTING_TEMP_UNIT, false);
         Timber.d("onCreateView");
 
+        setData();
+        return rootView;
+    }
+
+    private void setData() {
         try {
-            locationViewModel.getCurrentLocation().observe(this, locationData ->
-                    location = locationData.getLocation());
+            locationViewModel.getCurrentLocation().observe(this,
+                    locationData -> {
+                        if (locationData != null) {
+                            dataViewModel.getWeatherData(locationData.getLocation()).observe(this,
+                                    data -> {
+                                        if (data != null) {
+                                            Timber.d("onCreateView: mWeatherData %s", data.toString());
+                                            setChartSettings(data);
+                                            setupWeather(data, isCelsius, position);
+                                        }
+                                    });
+                        }
+                    });
         } catch (Exception e) {
             Timber.d(e, "Failed to load location");
         }
-        if (location == null) location = "Warszawa";
-        dataViewModel.getWeatherData(location).observe(this, data -> {
-            if (data != null) {
-                Timber.d("onCreateView: mWeatherData %s", data.toString());
-                setChartSettings(data);
-                setupWeather(data, isCelsius, position);
-            }
-        });
-        return rootView;
     }
 
     @OnClick(R.id.ic_date)
@@ -334,4 +340,5 @@ public class WeatherCurrentFragment extends Fragment implements Injectable {
         }
         return 1f;
     }
+
 }

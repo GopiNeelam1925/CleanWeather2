@@ -70,6 +70,7 @@ import timber.log.Timber;
 
 public class HomeActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener,
         SidebarAdapter.SidebarUserClickAction, HasSupportFragmentInjector, ModelViewControl {
+    private static final long EXPIRE_TIME = 10 * 60 * 1000;
     @BindView(R.id.toolbar)
     protected Toolbar mToolbar;
     @BindView(R.id.tabs)
@@ -103,7 +104,6 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
     @Inject
     DispatchingAndroidInjector<Fragment> supportFragmentInjector;
 
-
     @Override
     public void onCreate(Bundle savedInstanceState) {
 
@@ -117,24 +117,31 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
         mSharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
         PreferenceManager.setDefaultValues(this, R.xml.preferences, false);
         try {
-//            location = locationViewModel.getCurrentLocation().getValue().getLocation();
-            locationViewModel.getCurrentLocation().observe(this, locationData ->
-                    location = locationData.getLocation());
+            locationViewModel.getCurrentLocation().observe(this,
+                    locationData -> {
+                        if (locationData != null) {
+                            weatherViewModel.getWeatherData(locationData.getLocation()).observe(this,
+                                    data -> {
+                                        if (data != null) {
+                                            location = data.getLocationName();
+                                        }
+                                    });
+                        }
+                    });
         } catch (Exception e) {
-            Timber.d(e, "getLocation null exception loading temp default Warszawa");
+            Timber.d(e, "getLocation null exception");
         }
         if (checkGPSPermission() && location == null) {
             location = getGPSLocation();
         }
         language = Locale.getDefault().getLanguage();
         Timber.d("onCreate");
-        weatherViewModel.fetchWeather(location, 7, language);
+        fetchWeather(location);
         mViewPager.setHomeActivity(this);
         mSidebarAdapter = new SidebarAdapter();
         mSidebarAdapter.setSidebarClickListener(this, this);
         mSidebarList.setLayoutManager(new LinearLayoutManager(this));
         mSidebarList.setAdapter(mSidebarAdapter);
-
         setWeatherView();
     }
 
@@ -145,6 +152,31 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
 
     public int getCurrentPage() {
         return mViewPager.getCurrentItem();
+
+    }
+
+    private void fetchWeather(String location) {
+        Timber.d("current location fetch request %s", location);
+        if (isOnline()) {
+            weatherViewModel.fetchWeather(location, setAmountOfDays(), language).observe(this,
+                    response -> {
+                        switch (response.status) {
+                            case ERROR:
+                                Timber.d("ERROR");
+                                onFailure(response.error.getAppErrorMessage());
+                                break;
+                            case LOADING:
+                                Timber.d("LOADING");
+                                showWait();
+                                break;
+                            case SUCCESS:
+                                Timber.d("SUCCESS");
+                                weatherViewModel.addWeatherData(response.data);
+                                removeWait();
+                                break;
+                        }
+                    });
+        } else showToast(Constants.NETWORK_ERROR_MESSAGE);
 
     }
 
@@ -161,39 +193,37 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
     }
 
 
-//    public String setUnits() {
-//
-//        if (mSharedPreferences.getBoolean(Constants.SETTING_TEMP_UNIT, false)) {
-//            return "imperial";
-//        } else {
-//            return "metric";
-//        }
-//    }
-//    @Override
-//    public void showWait() {
-//        progressContainer.setVisibility(View.VISIBLE);
-//        mTabLayout.setVisibility(View.INVISIBLE);
-//        mViewPager.setVisibility(View.INVISIBLE);
-//        errorContainer.setVisibility(View.INVISIBLE);
-//    }
-//    @Override
-//    public void removeWait() {
-//        mViewPager.setVisibility(View.VISIBLE);
-//        mTabLayout.setVisibility(View.VISIBLE);
-//        progressContainer.setVisibility(View.INVISIBLE);
-//    }
-//    public void onFailure(String appErrorMessage) {
-//        errorContainer.setVisibility(View.VISIBLE);
-//        mTabLayout.setVisibility(View.INVISIBLE);
-//        mViewPager.setVisibility(View.INVISIBLE);
-//        progressContainer.setVisibility(View.INVISIBLE);
-//        Timber.e("onFailure %s ", appErrorMessage);
-//        Toast.makeText(this, R.string.error_message, Toast.LENGTH_SHORT).show();
-//    }
+    public void showWait() {
+        Timber.d("showWait");
+        progressContainer.setVisibility(View.VISIBLE);
+        mTabLayout.setVisibility(View.INVISIBLE);
+        mViewPager.setVisibility(View.INVISIBLE);
+        errorContainer.setVisibility(View.INVISIBLE);
+    }
 
+
+    public void removeWait() {
+        Timber.d("removeWait");
+        mViewPager.setVisibility(View.VISIBLE);
+        mTabLayout.setVisibility(View.VISIBLE);
+        progressContainer.setVisibility(View.INVISIBLE);
+    }
+
+    public void onSuccess() {
+        Timber.d("onSuccess");
+        errorContainer.setVisibility(View.INVISIBLE);
+    }
+
+    public void onFailure(String appErrorMessage) {
+        errorContainer.setVisibility(View.VISIBLE);
+        mTabLayout.setVisibility(View.INVISIBLE);
+        mViewPager.setVisibility(View.INVISIBLE);
+        progressContainer.setVisibility(View.INVISIBLE);
+        Timber.e("onFailure %s ", appErrorMessage);
+        Toast.makeText(this, R.string.error_message, Toast.LENGTH_SHORT).show();
+    }
 
     public void setWeatherView() {
-//        mSidebarAdapter.addSidebarListItem(weatherData.getLocationName());
         showFragments(createFragments());
     }
 
@@ -232,9 +262,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
             public boolean onQueryTextSubmit(String query) {
                 LocationData locationData = new LocationData(query, LocalDateTime.now());
                 mSidebarAdapter.addSidebarListItem(locationData);
-                weatherViewModel.fetchWeather(query, setAmountOfDays(), language);
-                location = query;
-                locationViewModel.addLocation(locationData);
+                fetchWeather(query);
                 searchView.clearFocus();
                 mActionButton.show();
                 getSupportActionBar().hide();
@@ -306,7 +334,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
             startActivity(intent);
         } else {
             isBackButtonPressed = true;
-            Toast.makeText(this, R.string.msg_exit, Toast.LENGTH_SHORT).show();
+            showToast(R.string.msg_exit);
             Timer t = new Timer();
             t.schedule(new TimerTask() {
                 @Override
@@ -361,7 +389,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
                     locationManager.removeUpdates(locationListener);
                 return geoLocation.toString();
             } else {
-                Toast.makeText(this, "GPS disabled", Toast.LENGTH_SHORT).show();
+                showToast("GPS disabled");
             }
         } catch (SecurityException e) {
             Timber.e("getLocationCurrent Error: %s", e.getMessage());
@@ -376,15 +404,17 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
 
 
     public boolean isOnline() {
-        ConnectivityManager cm =
-                (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+        ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
         NetworkInfo netInfo = cm.getActiveNetworkInfo();
         return netInfo != null && netInfo.isConnectedOrConnecting();
     }
 
     @Override
     public void onSidebarListItemClick(LocationData location) {
-        locationViewModel.addLocation(location);
+        locationViewModel.addLocation(new LocationData(location));
+        DrawerLayout drawer = findViewById(R.id.drawer_layout);
+        drawer.closeDrawer(GravityCompat.START);
+
 //        weatherViewModel.getWeatherData(location.getLocation()).observe(this,weatherData -> setWeatherView());
 //        if (isOnline())
 //            weatherViewModel.fetchWeather(location.getLocation(), setAmountOfDays(), language);
@@ -412,20 +442,30 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
         if (drawer.isDrawerOpen(GravityCompat.START)) {
             drawer.closeDrawer(GravityCompat.START);
         }
-        weatherViewModel.fetchWeather(getGPSLocation(), setAmountOfDays(), language);
+        fetchWeather(getGPSLocation());
+
     }
 
     @Override
     public void deleteWeather(WeatherData weatherData) {
-        weatherViewModel.getWeatherData(weatherData.getLocationName()).observe(this, data ->
-                weatherViewModel.deleteWeatherData(data));
-
+        weatherViewModel.getWeatherData(weatherData.getLocationName()).observe(this, data -> {
+            if (data != null) weatherViewModel.deleteWeatherData(data);
+        });
     }
 
     @Override
     public void deleteLocation(LocationData location) {
         locationViewModel.deleteLocation(location);
-        weatherViewModel.getWeatherData(location.getLocation()).observe(this, data ->
-                weatherViewModel.deleteWeatherData(data));
+        weatherViewModel.getWeatherData(location.getLocation()).observe(this, data -> {
+            if (data != null) weatherViewModel.deleteWeatherData(data);
+        });
+    }
+
+    public void showToast(String message) {
+        Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
+    }
+
+    public void showToast(int message) {
+        Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
     }
 }
