@@ -186,6 +186,9 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
 
     public void updateWeather() {
         Timber.d("updateWeather: ");
+        locationViewModel.getCurrentLocation().observe(this, locationData -> {
+            if (locationData != null) fetchWeather(locationData.getLocation());
+        });
     }
 
     public int setAmountOfDays() {
@@ -296,26 +299,6 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
         return true;
     }
 
-//    @Override
-//    protected void onSaveInstanceState(Bundle outState) {
-//        outState.putSerializable(Constants.WEATHER_DATA, mWeatherData);
-//        outState.putStringArrayList(Constants.LIST_OF_CITIES, (ArrayList<String>) mSidebarAdapter.getSidebarListItems());
-//        super.onSaveInstanceState(outState);
-//    }
-
-//    @Override
-//    protected void onRestoreInstanceState(Bundle savedInstanceState) {
-//        if (savedInstanceState != null) {
-//            mWeatherData = (WeatherData) savedInstanceState.getSerializable(Constants.WEATHER_DATA);
-//            if (mWeatherData != null) {
-//                mSearchLocation = mWeatherData.getLocationCurrent();
-//                Timber.d(TAG, "onRestoreInstanceState" + " " + "restored weatherData" + mWeatherData.toString());
-//                isGeoPossibleFlag = false;
-//                mSidebarAdapter.setSidebarListItems(savedInstanceState.getStringArrayList(Constants.LIST_OF_CITIES));
-//            }
-//        }
-//        super.onRestoreInstanceState(savedInstanceState);
-//    }
 
     @Override
     public void onBackPressed() {
@@ -415,13 +398,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
         DrawerLayout drawer = findViewById(R.id.drawer_layout);
         drawer.closeDrawer(GravityCompat.START);
 
-//        weatherViewModel.getWeatherData(location.getLocation()).observe(this,weatherData -> setWeatherView());
-//        if (isOnline())
-//            weatherViewModel.fetchWeather(location.getLocation(), setAmountOfDays(), language);
-//        else {
-//            setWeatherView();
-//            Toast.makeText(this, R.string.offline_message, Toast.LENGTH_SHORT).show();
-//        }
+
     }
 
     @Override
